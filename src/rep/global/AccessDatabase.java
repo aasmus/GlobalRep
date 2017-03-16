@@ -99,7 +99,8 @@ public class AccessDatabase {
 						}
 
 			}
-						
+					
+			rs.close();
 			ps.close();
 
 		} catch (SQLException e) {
@@ -114,7 +115,7 @@ public class AccessDatabase {
 		return "";
 	}
 	
-	public void addRep(String[] args, Player player, int rep) {
+	public boolean addRep(String[] args, Player player, int rep) {
 		
 		String comment = "";	
 		if(args.length >= 4) {
@@ -125,8 +126,82 @@ public class AccessDatabase {
 			}
 			comment = builder.toString();
 		}
-
+		String uuid = null;
+		try {
+		uuid = player.getUniqueId().toString();
+		} catch(Exception e) {
+			return false;
+		}
 		
+		try {
+			Class.forName("com.mysql.jdbc.Driver").newInstance();
+		} catch (InstantiationException e) {
+			System.out.println("InstantiationException: ");
+			e.printStackTrace();
+			throw new RuntimeException(e);
+		} catch (IllegalAccessException e) {
+			System.out.println("IllegalAccessException: ");
+			e.printStackTrace();
+			throw new RuntimeException(e);
+		} catch (ClassNotFoundException e) {
+			System.out.println("ClassNotFoundException: ");
+			e.printStackTrace();
+			throw new RuntimeException(e);
+		}
+
+		Connection conn = null;
+
+		try {
+			conn = DriverManager.getConnection("jdbc:mysql://" + this.DB_IP + ":" + this.DB_PORT + "/" + this.DB_NAME, this.user, this.pass);	
+			PreparedStatement ps = null;
+			ResultSet rs = null;
+		
+		String query = "SELECT userId FROM User WHERE UUID = '?'";
+		try {
+			ps = conn.prepareStatement(query);
+			ps.setString(1, uuid);
+			rs = ps.executeQuery();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		String insert;
+		if(rs == null){
+			insert = "INSERT INTO User (uuid, username) VALUES ?, ?";
+			try {
+				ps = conn.prepareStatement(query);
+				ps.setString(1, uuid);
+				ps.setString(2, player.getName());
+				ps.executeUpdate();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+
+		}
+		
+		query = "SELECT userId FROM User WHERE UUID = '?'";
+		try {
+			ps = conn.prepareStatement(query);
+			ps.setString(1, uuid);
+			rs = ps.executeQuery();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		int userId = Integer.parseInt(rs);
+		
+		insert = "INSERT INTO Rep (date, repAmount, comment, userId) VALUES ?, ?, ?, ?";
+		ps = conn.prepareStatement(insert);
+		ps.setString(1, date);
+		ps.setInt(2, rep);
+		ps.setString(3, comment);
+		ps.setInt(4, userId);
+		
+		} catch (SQLException e) {
+			System.out.println("SQLException: ");
+			e.printStackTrace();
+			return false;
+		}
+		
+		return true;
 	}
 
 }
