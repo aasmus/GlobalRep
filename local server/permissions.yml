@@ -1,0 +1,8 @@
+users:
+    legit_craft:
+        permissions:
+            rep.allow
+            rep.amount.1
+    SmokinDaDank:
+        permissions:
+            rep.allow
