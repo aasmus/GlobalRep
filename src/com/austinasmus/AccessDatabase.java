@@ -119,7 +119,7 @@ public class AccessDatabase {
 
 	}
 	
-	public void getRep(Player player, String username) {
+	public synchronized void getRep(Player player, String username) {
 		UUID uid = null;
 		String uuid = null;
 		try {
@@ -231,7 +231,7 @@ public class AccessDatabase {
 		return;
 	}
 	
-	public void addRep(String[] args, Player player, int rep) {
+	public synchronized void addRep(String[] args, Player player, int rep) {
 		if(player.getName().equalsIgnoreCase(args[0])) {
 			player.sendMessage(ChatColor.RED + "You cannot give yourself rep.");
 			return;

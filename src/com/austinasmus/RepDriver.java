@@ -76,50 +76,64 @@ public class RepDriver extends JavaPlugin implements Listener {
     				
     			} else if(args.length >= 3) {
     				if(args[1].equalsIgnoreCase("positive")){
-    					if(player.hasPermission("rep.amount.10")){
-        					data.addRep(args, player, 10);
-						} else if(player.hasPermission("rep.amount.9")){
-        					data.addRep(args, player, 9);
-						} else if(player.hasPermission("rep.amount.8")){
-        					data.addRep(args, player, 8);
-						} else if(player.hasPermission("rep.amount.7")){
-        					data.addRep(args, player, 7);
-						} else if(player.hasPermission("rep.amount.6")){
-        					data.addRep(args, player, 6);
-						} else if(player.hasPermission("rep.amount.5")){
-        					data.addRep(args, player, 5);
-						} else if(player.hasPermission("rep.amount.4")){
-        					data.addRep(args, player, 4);
-						} else if(player.hasPermission("rep.amount.3")){
-        					data.addRep(args, player, 3);
-						} else if(player.hasPermission("rep.amount.2")){
-        					data.addRep(args, player, 2);
-						} else if(player.hasPermission("rep.amount.1")){
-        					data.addRep(args, player, 1);
-						}
+    					for(int i = 0; i < 10; i++) {
+    						if(player.hasPermission("rep.amount." + i)) {
+    							data.addRep(args, player, i);
+    							break;
+    						}
+    					}
+    						
+//    					if(player.hasPermission("rep.amount.10")){
+//        					data.addRep(args, player, 10);
+//						} else if(player.hasPermission("rep.amount.9")){
+//        					data.addRep(args, player, 9);
+//						} else if(player.hasPermission("rep.amount.8")){
+//        					data.addRep(args, player, 8);
+//						} else if(player.hasPermission("rep.amount.7")){
+//        					data.addRep(args, player, 7);
+//						} else if(player.hasPermission("rep.amount.6")){
+//        					data.addRep(args, player, 6);
+//						} else if(player.hasPermission("rep.amount.5")){
+//        					data.addRep(args, player, 5);
+//						} else if(player.hasPermission("rep.amount.4")){
+//        					data.addRep(args, player, 4);
+//						} else if(player.hasPermission("rep.amount.3")){
+//        					data.addRep(args, player, 3);
+//						} else if(player.hasPermission("rep.amount.2")){
+//        					data.addRep(args, player, 2);
+//						} else if(player.hasPermission("rep.amount.1")){
+//        					data.addRep(args, player, 1);
+//						}
     					
     				}else if(args[1].equalsIgnoreCase("negative")) {
-    					if(player.hasPermission("rep.amount.10")){
-        					data.addRep(args, player, -10);
-						} else if(player.hasPermission("rep.amount.9")){
-        					data.addRep(args, player, -9);
-						} else if(player.hasPermission("rep.amount.8")){
-        					data.addRep(args, player, -8);
-						} else if(player.hasPermission("rep.amount.7")){
-        					data.addRep(args, player, -7);
-						} else if(player.hasPermission("rep.amount.6")){
-        					data.addRep(args, player, -6);
-						} else if(player.hasPermission("rep.amount.5")){
-        					data.addRep(args, player, -5);
-						} else if(player.hasPermission("rep.amount.4")){
-        					data.addRep(args, player, -4);
-						} else if(player.hasPermission("rep.amount.3")){
-        					data.addRep(args, player, -3);
-						} else if(player.hasPermission("rep.amount.2")){
-        					data.addRep(args, player, -2);
-						} else if(player.hasPermission("rep.amount.1")){
-        					data.addRep(args, player, -1);
-						}
+    					for(int i = 0; i < 10; i++) {
+    						if(player.hasPermission("rep.amount." + i)) {
+    							data.addRep(args, player, -i);
+    							break;
+    						}
+    					}
+    					
+//    					if(player.hasPermission("rep.amount.10")){
+//        					data.addRep(args, player, -10);
+//						} else if(player.hasPermission("rep.amount.9")){
+//        					data.addRep(args, player, -9);
+//						} else if(player.hasPermission("rep.amount.8")){
+//        					data.addRep(args, player, -8);
+//						} else if(player.hasPermission("rep.amount.7")){
+//        					data.addRep(args, player, -7);
+//						} else if(player.hasPermission("rep.amount.6")){
+//        					data.addRep(args, player, -6);
+//						} else if(player.hasPermission("rep.amount.5")){
+//        					data.addRep(args, player, -5);
+//						} else if(player.hasPermission("rep.amount.4")){
+//        					data.addRep(args, player, -4);
+//						} else if(player.hasPermission("rep.amount.3")){
+//        					data.addRep(args, player, -3);
+//						} else if(player.hasPermission("rep.amount.2")){
+//        					data.addRep(args, player, -2);
+//						} else if(player.hasPermission("rep.amount.1")){
+//        					data.addRep(args, player, -1);
+//						}
     					
     				}else {
     					player.sendMessage(ChatColor.RED + args[1] + " is an unknown parameter accepted parameters are: positive, negative");
