@@ -9,18 +9,3 @@ commands:
     usage: /rep
     permission: globalrep.rep
     permission-message: You don't have the globalrep.rep permission node.
-  repPlayer:
-    description: See a players reputation
-    usage: /rep  <playername> 
-    permission: globalrep.repplayer
-    permission-message: You don't have the globalrep.repplayer permission node.
-  repPositive:
-    description: Give a player positive rep
-    usage: /rep  <playername> positive <comment>
-    permission: globalrep.reppositive
-    permission-message: You don't have the globalrep.reppositive permission node.
-  repNegative:
-    description: Give a player negative rep
-    usage: /rep  <playername> negative <comment>
-    permission: globalrep.repnegative
-    permission-message: You don't have the globalrep.repnegative permission node.
