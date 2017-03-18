@@ -5,7 +5,9 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class RepDriver extends JavaPlugin implements Listener {
@@ -25,8 +27,8 @@ public class RepDriver extends JavaPlugin implements Listener {
             this.username = config.getString("MYSQL.Username");
             this.password = config.getString("MYSQL.Password");
             
-            AccessDatabase tables = new AccessDatabase(host, port, database, username, password);
-            tables.generateTables();
+            AccessDatabase accessDb = new AccessDatabase(host, port, database, username, password);
+            accessDb.generateTables();
     	}
     	
     	if(!config.contains("MYSQL.Host")) {
@@ -46,6 +48,8 @@ public class RepDriver extends JavaPlugin implements Listener {
     	}
         config.options().copyDefaults(true);
         saveConfig();
+        
+        getServer().getPluginManager().registerEvents(this, this);
 
     }
    
@@ -54,9 +58,17 @@ public class RepDriver extends JavaPlugin implements Listener {
        
     }
     
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent event) {
+    	Player p = event.getPlayer();
+    	
+    	AccessDatabase accessDb = new AccessDatabase(host, port, database, username, password);
+    	accessDb.checkDatabase(p.getName(), p.getUniqueId().toString());
+    	
+    }
+    
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args){
-    	
         if (!(sender instanceof Player)) {
             return false;
         }
@@ -70,73 +82,29 @@ public class RepDriver extends JavaPlugin implements Listener {
         		player.sendMessage(ChatColor.GOLD + "Use /rep <name> negative <comment> to give negative rep!");
         		player.sendMessage(ChatColor.RED + "==================================================");
     		} else {
-		        AccessDatabase data = new AccessDatabase(host, port, database, username, password);
+    	    	AccessDatabase accessDb = new AccessDatabase(host, port, database, username, password);
     			if(args.length == 1) {
-    				data.getRep(player, args[0]);
+    				accessDb.getRep(player, args[0]);
     				
-    			} else if(args.length >= 3) {
+    			} else if(args.length >= 2) {
     				if(args[1].equalsIgnoreCase("positive")){
     					for(int i = 0; i < 10; i++) {
     						if(player.hasPermission("rep.amount." + i)) {
-    							data.addRep(args, player, i);
+    							accessDb.addRep(args, player, i);
     							break;
     						}
     					}
-    						
-//    					if(player.hasPermission("rep.amount.10")){
-//        					data.addRep(args, player, 10);
-//						} else if(player.hasPermission("rep.amount.9")){
-//        					data.addRep(args, player, 9);
-//						} else if(player.hasPermission("rep.amount.8")){
-//        					data.addRep(args, player, 8);
-//						} else if(player.hasPermission("rep.amount.7")){
-//        					data.addRep(args, player, 7);
-//						} else if(player.hasPermission("rep.amount.6")){
-//        					data.addRep(args, player, 6);
-//						} else if(player.hasPermission("rep.amount.5")){
-//        					data.addRep(args, player, 5);
-//						} else if(player.hasPermission("rep.amount.4")){
-//        					data.addRep(args, player, 4);
-//						} else if(player.hasPermission("rep.amount.3")){
-//        					data.addRep(args, player, 3);
-//						} else if(player.hasPermission("rep.amount.2")){
-//        					data.addRep(args, player, 2);
-//						} else if(player.hasPermission("rep.amount.1")){
-//        					data.addRep(args, player, 1);
-//						}
     					
     				}else if(args[1].equalsIgnoreCase("negative")) {
     					for(int i = 0; i < 10; i++) {
     						if(player.hasPermission("rep.amount." + i)) {
-    							data.addRep(args, player, -i);
+    							accessDb.addRep(args, player, -i);
     							break;
     						}
     					}
     					
-//    					if(player.hasPermission("rep.amount.10")){
-//        					data.addRep(args, player, -10);
-//						} else if(player.hasPermission("rep.amount.9")){
-//        					data.addRep(args, player, -9);
-//						} else if(player.hasPermission("rep.amount.8")){
-//        					data.addRep(args, player, -8);
-//						} else if(player.hasPermission("rep.amount.7")){
-//        					data.addRep(args, player, -7);
-//						} else if(player.hasPermission("rep.amount.6")){
-//        					data.addRep(args, player, -6);
-//						} else if(player.hasPermission("rep.amount.5")){
-//        					data.addRep(args, player, -5);
-//						} else if(player.hasPermission("rep.amount.4")){
-//        					data.addRep(args, player, -4);
-//						} else if(player.hasPermission("rep.amount.3")){
-//        					data.addRep(args, player, -3);
-//						} else if(player.hasPermission("rep.amount.2")){
-//        					data.addRep(args, player, -2);
-//						} else if(player.hasPermission("rep.amount.1")){
-//        					data.addRep(args, player, -1);
-//						}
-    					
     				}else {
-    					player.sendMessage(ChatColor.RED + args[1] + " is an unknown parameter accepted parameters are: positive, negative");
+    					player.sendMessage(ChatColor.RED + args[1] + " is an unknown parameter. Parameters are: positive, negative");
     				}
     			}
     			

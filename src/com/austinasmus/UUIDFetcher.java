@@ -39,9 +39,11 @@ public class UUIDFetcher implements Callable<Map<String, UUID>> {
     private static final String PROFILE_URL = "https://api.mojang.com/profiles/minecraft";
     private final JSONParser jsonParser = new JSONParser();
     private final List<String> names;
+    private final boolean rateLimiting;
 
     public UUIDFetcher(List<String> names, boolean rateLimiting) {
         this.names = ImmutableList.copyOf(names);
+        this.rateLimiting = rateLimiting;
     }
 
     public UUIDFetcher(List<String> names) {
@@ -62,6 +64,9 @@ public class UUIDFetcher implements Callable<Map<String, UUID>> {
                 String name = (String) jsonProfile.get("name");
                 UUID uuid = UUIDFetcher.getUUID(id);
                 uuidMap.put(name, uuid);
+            }
+            if (rateLimiting && i != requests - 1) {
+                Thread.sleep(100L);
             }
         }
         return uuidMap;
