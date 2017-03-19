@@ -7,6 +7,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
@@ -29,7 +32,7 @@ public class AccessDatabase {
 		this.pass = password;
 	}
 
-	public void generateTables() {
+	private Connection getConnection() {
 		try {
 			Class.forName("com.mysql.jdbc.Driver").newInstance();
 		} catch (InstantiationException e) {
@@ -50,6 +53,18 @@ public class AccessDatabase {
 
 		try {
 			conn = DriverManager.getConnection("jdbc:mysql://" + this.DB_IP + ":" + this.DB_PORT + "/" + this.DB_NAME, this.user, this.pass);
+
+		} catch (SQLException e) {
+			System.out.println("SQLException: ");
+			e.printStackTrace();
+			throw new RuntimeException(e);
+		}
+		return conn;
+	}
+	
+	public void generateTables() {
+		try {
+			Connection conn = getConnection();
 			PreparedStatement ps = null;
 			ResultSet rs = null;
 			
@@ -98,15 +113,14 @@ public class AccessDatabase {
 						+ "FOREIGN KEY (giverId) REFERENCES User (userId), "
 						+ "FOREIGN KEY (userId) REFERENCES User (userId))";
 
-						try {
-							ps = conn.prepareStatement(table);
-							ps.executeUpdate();
-							System.out.println("[GlobalRep] Rep table created");
-						} catch (SQLException e) {
-							e.printStackTrace();
-						}
-			}
-					
+				try {
+					ps = conn.prepareStatement(table);
+					ps.executeUpdate();
+					System.out.println("[GlobalRep] Rep table created");
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			}		
 			rs.close();
 			ps.close();
 
@@ -118,73 +132,51 @@ public class AccessDatabase {
 	}
 	
 	public synchronized void checkDatabase(String name, String uuid) {
+		Connection conn = getConnection();
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		
+		String query = "SELECT username FROM User WHERE UUID = ?";
+		String insert;
+		
 		try {
-			Class.forName("com.mysql.jdbc.Driver").newInstance();
-		} catch (InstantiationException e) {
-			System.out.println("InstantiationException: ");
-			e.printStackTrace();
-			throw new RuntimeException(e);
-		} catch (IllegalAccessException e) {
-			System.out.println("IllegalAccessException: ");
-			e.printStackTrace();
-			throw new RuntimeException(e);
-		} catch (ClassNotFoundException e) {
-			System.out.println("ClassNotFoundException: ");
-			e.printStackTrace();
-			throw new RuntimeException(e);
-		}
-
-		Connection conn = null;
-
-		try {
-			conn = DriverManager.getConnection("jdbc:mysql://" + this.DB_IP + ":" + this.DB_PORT + "/" + this.DB_NAME, this.user, this.pass);	
-			PreparedStatement ps = null;
-			ResultSet rs = null;
-			
-			String query = "SELECT username FROM User WHERE UUID = ?";
-			String insert;
-			
-			try {
-				ps = conn.prepareStatement(query);
+			ps = conn.prepareStatement(query);
+			ps.setString(1, uuid);
+			rs = ps.executeQuery();
+			if(!rs.next()) {
+				insert = "INSERT INTO User (UUID, username) VALUES (?, ?)";
+				ps = conn.prepareStatement(insert);
 				ps.setString(1, uuid);
-				rs = ps.executeQuery();
-				if(!rs.next()) {
-					insert = "INSERT INTO User (UUID, username) VALUES (?, ?)";
-					ps = conn.prepareStatement(insert);
-					ps.setString(1, uuid);
-					ps.setString(2, name);
-					ps.executeUpdate();
-				} else if(rs.next()) {
-					if(!rs.getString("username").equals(name)) {
-						insert = "INSERT INTO User (username) VALUES ? WHERE UUID = (?)";
-						
-					    try(PreparedStatement ps1 = conn.prepareStatement(insert);) {
-							ps.setString(1, name);
-							ps.setString(2, uuid);
+				ps.setString(2, name);
+				ps.executeUpdate();
+			} else if(rs.next()) {
+				if(!rs.getString("username").equals(name)) {
+					insert = "INSERT INTO User (username) VALUES ? WHERE UUID = (?)";
+				    try(PreparedStatement ps1 = conn.prepareStatement(insert);) {
+						ps.setString(1, name);
+						ps.setString(2, uuid);
 
-					    } catch(SQLException se) {
-					        se.printStackTrace();
-					    }
-					}
+				    } catch(SQLException se) {
+				        se.printStackTrace();
+				    }
 				}
-				
-				ps.close();
-				rs.close();
-			} catch (SQLException e) {
-				e.printStackTrace();
 			}
-			
+			ps.close();
+			rs.close();
 		} catch (SQLException e) {
-			System.out.println("SQLException: ");
 			e.printStackTrace();
-			throw new RuntimeException(e);
 		}
 		
 	}
 	
 	@SuppressWarnings("deprecation")
 	public synchronized void getRep(Player player, String username) {
+		try {
+			Connection conn = getConnection();
+			PreparedStatement ps = null;
+			ResultSet rs = null;
 			String uuid = null;
+			String query;
 			if(Bukkit.getServer().getPlayer(username) != null) {
 				uuid = Bukkit.getServer().getPlayer(username).getUniqueId().toString();
 			} else {
@@ -194,113 +186,100 @@ public class AccessDatabase {
 				} else {
 					try {
 						uuid = UUIDFetcher.getUUIDOf(username).toString();
+						query = "SELECT userId FROM User WHERE UUID = (?)";
+						try {
+							ps = conn.prepareStatement(query);
+							ps.setString(1, uuid);
+							rs = ps.executeQuery();
+							if(!rs.next()) {
+								player.sendMessage(ChatColor.RED + "That player does not exist!");
+								return;
+							}
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+						
+						
 					} catch(Exception e) {
 						player.sendMessage(ChatColor.RED + "That player does not exist!");
 						return;
 					}
 				}
 			}
-			
-			try {
-				Class.forName("com.mysql.jdbc.Driver").newInstance();
-			} catch (InstantiationException e) {
-				System.out.println("InstantiationException: ");
-				e.printStackTrace();
-				throw new RuntimeException(e);
-			} catch (IllegalAccessException e) {
-				System.out.println("IllegalAccessException: ");
-				e.printStackTrace();
-				throw new RuntimeException(e);
-			} catch (ClassNotFoundException e) {
-				System.out.println("ClassNotFoundException: ");
-				e.printStackTrace();
-				throw new RuntimeException(e);
-			}
-
-			Connection conn = null;
-			
-			try {
-				conn = DriverManager.getConnection("jdbc:mysql://" + this.DB_IP + ":" + this.DB_PORT + "/" + this.DB_NAME, this.user, this.pass);	
-				PreparedStatement ps = null;
-				ResultSet rs = null;
 				
-				
-				String query = "SELECT userId FROM Rep WHERE userId = (SELECT userId FROM User WHERE UUID = (?))";
-				try {
-					ps = conn.prepareStatement(query);
-					ps.setString(1, uuid);
-					rs = ps.executeQuery();
-					if(!rs.next()) {
-						player.sendMessage(ChatColor.BLUE + username + " has no rep!");
-						return;
-					} else {
-						ArrayList<String> dates = new ArrayList<String>();
-						ArrayList<Integer> reps = new ArrayList<Integer>();
-						ArrayList<String> comments = new ArrayList<String>();
-						ArrayList<String> names = new ArrayList<String>();
-						query = "SELECT r.date, r.repAmount, r.comment, u.username FROM Rep r JOIN  User u ON r.giverId = u.userId WHERE r.userId = (SELECT userId FROM User WHERE uuid = ?)";
-						try {
-							ps = conn.prepareStatement(query);
-							ps.setString(1, uuid);
-							rs = ps.executeQuery();
-							while(rs.next()){
-								String date = rs.getString("r.date");
-								int repAmount = rs.getInt("r.repAmount");
-								String comment = rs.getString("r.comment");
-								String name = rs.getString("u.username");
-								
-								dates.add(date);
-								reps.add(repAmount);
-								comments.add(comment);
-								names.add(name);							
-
+			query = "SELECT userId FROM Rep WHERE userId = (SELECT userId FROM User WHERE UUID = (?))";
+			try {
+				ps = conn.prepareStatement(query);
+				ps.setString(1, uuid);
+				rs = ps.executeQuery();
+				if(!rs.next()) {
+					player.sendMessage(ChatColor.BLUE + username + " has no rep!");
+					return;
+				} else {
+					List<String> dates = Collections.synchronizedList( new ArrayList<String>());
+					List<Integer> reps = Collections.synchronizedList( new ArrayList<Integer>());
+					List<String> comments = Collections.synchronizedList( new ArrayList<String>());
+					List<String> names = Collections.synchronizedList( new ArrayList<String>());
+					query = "SELECT r.date, r.repAmount, r.comment, u.username FROM Rep r JOIN  User u ON r.giverId = u.userId WHERE r.userId = (SELECT userId FROM User WHERE uuid = ?)";
+					
+					try {
+						ps = conn.prepareStatement(query);
+						ps.setString(1, uuid);
+						rs = ps.executeQuery();
+						while(rs.next()){
+							String date = rs.getString("r.date");
+							int repAmount = rs.getInt("r.repAmount");
+							String comment = rs.getString("r.comment");
+							String name = rs.getString("u.username");
+							dates.add(date);
+							reps.add(repAmount);
+							comments.add(comment);
+							names.add(name);							
 							}
-							player.sendMessage(ChatColor.BLUE + username + "'s reputation:");
-							for(int i = 0; i < dates.size(); i++) {
-								if(reps.get(i) > 0){
-									player.sendMessage(ChatColor.GREEN + "+" + reps.get(i) + " " + ChatColor.GRAY + dates.get(i) + " " + ChatColor.YELLOW + names.get(i) + ": " + ChatColor.RESET + comments.get(i));
-								} else {
-									player.sendMessage(ChatColor.RED + "" + reps.get(i) + " " + ChatColor.GRAY + dates.get(i) + " " + ChatColor.YELLOW + names.get(i) + ": " + ChatColor.RESET + comments.get(i));
-								}
-							}
-							int positiveRep = 0;
-							int negativeRep = 0;
-							for(int i = 0; i < reps.size(); i++){
-								if(reps.get(i) > 0) {
-									positiveRep += reps.get(i);
-								} else if (reps.get(i) < 0) {
-									negativeRep += reps.get(i);
-								}
-							}
-							player.sendMessage(ChatColor.GREEN + "Positive Rep: " + positiveRep + " " + ChatColor.RED + "Negative Rep: " + Math.abs(negativeRep));
-							
-							if(positiveRep + negativeRep > 0) {
-								player.sendMessage(ChatColor.AQUA + "Total Reputation: " + ChatColor.GREEN + (positiveRep + negativeRep));
-							} else if(positiveRep + negativeRep < 0) {
-								player.sendMessage(ChatColor.AQUA + "Total Reputation: " + ChatColor.RED + (positiveRep + negativeRep));
+						player.sendMessage(ChatColor.BLUE + username + "'s reputation:");
+						for(int i = 0; i < dates.size(); i++) {
+							if(reps.get(i) > 0){
+								player.sendMessage(ChatColor.GREEN + "+" + reps.get(i) + " " + ChatColor.GRAY + dates.get(i) + " " + ChatColor.YELLOW + names.get(i) + ": " + ChatColor.RESET + comments.get(i));
 							} else {
-								player.sendMessage(ChatColor.AQUA + "Total Reputation: " + ChatColor.GRAY + (positiveRep + negativeRep));
+								player.sendMessage(ChatColor.RED + "" + reps.get(i) + " " + ChatColor.GRAY + dates.get(i) + " " + ChatColor.YELLOW + names.get(i) + ": " + ChatColor.RESET + comments.get(i));
 							}
-							
-							
-						} catch (SQLException e) {
-							e.printStackTrace();
-						} catch (Exception e) {
-							e.printStackTrace();
 						}
 						
+						int positiveRep = 0;
+						int negativeRep = 0;
+						for(int i = 0; i < reps.size(); i++){
+							if(reps.get(i) > 0) {
+								positiveRep += reps.get(i);
+							} else if (reps.get(i) < 0) {
+								negativeRep += reps.get(i);
+							}
+						}
+						player.sendMessage(ChatColor.GREEN + "Positive Rep: " + positiveRep + " " + ChatColor.RED + "Negative Rep: " + Math.abs(negativeRep));
+						
+						if(positiveRep + negativeRep > 0) {
+							player.sendMessage(ChatColor.AQUA + "Total Reputation: " + ChatColor.GREEN + (positiveRep + negativeRep));
+						} else if(positiveRep + negativeRep < 0) {
+							player.sendMessage(ChatColor.AQUA + "Total Reputation: " + ChatColor.RED + (positiveRep + negativeRep));
+						} else {
+							player.sendMessage(ChatColor.AQUA + "Total Reputation: " + ChatColor.GRAY + (positiveRep + negativeRep));
+						}
+					} catch (SQLException e) {
+						e.printStackTrace();
+					} catch (Exception e) {
+						e.printStackTrace();
 					}
-				} catch (SQLException e) {
-					e.printStackTrace();
 				}
-				
-				ps.close();
-				rs.close();
 			} catch (SQLException e) {
 				e.printStackTrace();
-				return;
 			}
-		
+			ps.close();
+			rs.close();
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return;
+				
+		}
 		return;
 	}
 	
@@ -319,28 +298,8 @@ public class AccessDatabase {
 			}
 			comment = builder.toString();
 		}
-		
-		
 		try {
-			Class.forName("com.mysql.jdbc.Driver").newInstance();
-		} catch (InstantiationException e) {
-			System.out.println("InstantiationException: ");
-			e.printStackTrace();
-			throw new RuntimeException(e);
-		} catch (IllegalAccessException e) {
-			System.out.println("IllegalAccessException: ");
-			e.printStackTrace();
-			throw new RuntimeException(e);
-		} catch (ClassNotFoundException e) {
-			System.out.println("ClassNotFoundException: ");
-			e.printStackTrace();
-			throw new RuntimeException(e);
-		}
-
-		Connection conn = null;
-		
-		try {
-			conn = DriverManager.getConnection("jdbc:mysql://" + this.DB_IP + ":" + this.DB_PORT + "/" + this.DB_NAME, this.user, this.pass);	
+			Connection conn = getConnection();	
 			PreparedStatement ps = null;
 			ResultSet rs = null;
 			
@@ -354,7 +313,6 @@ public class AccessDatabase {
 				return;
 			} else {
 				String uuid = rs.getString("UUID");
-				
 				query = "SELECT userId FROM User WHERE UUID = ?";
 				try {
 					ps = conn.prepareStatement(query);
@@ -362,7 +320,6 @@ public class AccessDatabase {
 					rs = ps.executeQuery();
 					if(rs.next()) {
 						int userId = rs.getInt("userId");
-						
 						query = "SELECT userId FROM User WHERE UUID = ?";
 						try {
 							ps = conn.prepareStatement(query);
@@ -379,10 +336,10 @@ public class AccessDatabase {
 								ps.setInt(1, giverId);
 								ps.setInt(2, userId);
 								rs = ps.executeQuery();
+								
 							} catch (SQLException e) {
 								e.printStackTrace();
 							}
-							
 							if(rs.next()){
 								int repId = rs.getInt("repId");
 								String delete = "DELETE FROM Rep WHERE repId = ?";
@@ -390,11 +347,11 @@ public class AccessDatabase {
 									ps = conn.prepareStatement(delete);
 									ps.setInt(1, repId);
 									ps.executeUpdate();
+									
 								} catch (SQLException e) {
 									e.printStackTrace();
 								}
 							}
-							
 							LocalDateTime currentDate = LocalDateTime.now();
 							String date = currentDate.toString();
 							String[] time = date.split("T");
@@ -419,17 +376,13 @@ public class AccessDatabase {
 									ps.close();
 									return;
 								}
-								
 							} catch (SQLException e) {
 								e.printStackTrace();
 							}
-							
 						} catch (SQLException e) {
 							e.printStackTrace();
 						}
-						
-					}
-					
+					}	
 				} catch (SQLException e) {
 					e.printStackTrace();
 				}
@@ -437,7 +390,6 @@ public class AccessDatabase {
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
-		
 			rs.close();
 			ps.close();
 			
@@ -445,8 +397,6 @@ public class AccessDatabase {
 			e.printStackTrace();
 			return;
 		}
-		
 		return;
 	}
-
 }
