@@ -87,7 +87,7 @@ public class RepDriver extends JavaPlugin implements Listener {
     public void onPlayerJoin(PlayerJoinEvent event) {
     	Player p = event.getPlayer();
     	BukkitScheduler scheduler = getServer().getScheduler();
-    	scheduler.runTaskLater(this, new Runnable() {
+    	scheduler.runTaskLaterAsynchronously(this, new Runnable() {
             @SuppressWarnings("deprecation")
 			public void run() {
             	if((System.currentTimeMillis() - Bukkit.getOfflinePlayer(p.getName()).getLastPlayed()) > 60000) {
