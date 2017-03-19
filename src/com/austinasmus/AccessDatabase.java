@@ -44,6 +44,7 @@ public class AccessDatabase {
 	private String DB_NAME;
 	private String user;
 	private String pass;
+	private Connection connection;
 
 	public AccessDatabase(String databaseIp, int databasePort, String databaseName, String username, String password) {
 		this.DB_IP = databaseIp;
@@ -51,6 +52,7 @@ public class AccessDatabase {
 		this.DB_NAME = databaseName;
 		this.user = username;
 		this.pass = password;
+		this.connection = getConnection();
 	}
 
 	private Connection getConnection() {
@@ -85,14 +87,13 @@ public class AccessDatabase {
 	
 	public void generateTables() {
 		try {
-			Connection conn = getConnection();
 			PreparedStatement ps = null;
 			ResultSet rs = null;
 			
 			String query = "SELECT table_name FROM information_schema.tables WHERE table_schema = ? AND table_name = 'User'";
 			
 			try {
-				ps = conn.prepareStatement(query);
+				ps = connection.prepareStatement(query);
 				ps.setString(1, DB_NAME);
 				rs = ps.executeQuery();
 			} catch (SQLException e) {
@@ -106,7 +107,7 @@ public class AccessDatabase {
 				+ "username varchar(16) NOT NULL)";
 
 				try {
-					ps = conn.prepareStatement(table);
+					ps = connection.prepareStatement(table);
 					ps.executeUpdate();
 					System.out.println("[GlobalRep] User table created");
 				} catch (SQLException e) {
@@ -116,7 +117,7 @@ public class AccessDatabase {
 			query = "SELECT table_name FROM information_schema.tables WHERE table_schema = ? AND table_name = 'Rep'";
 			
 			try {
-				ps = conn.prepareStatement(query);
+				ps = connection.prepareStatement(query);
 				ps.setString(1, DB_NAME);
 				rs = ps.executeQuery();
 			} catch (SQLException e) {
@@ -135,7 +136,7 @@ public class AccessDatabase {
 						+ "FOREIGN KEY (userId) REFERENCES User (userId))";
 
 				try {
-					ps = conn.prepareStatement(table);
+					ps = connection.prepareStatement(table);
 					ps.executeUpdate();
 					System.out.println("[GlobalRep] Rep table created");
 				} catch (SQLException e) {
@@ -153,7 +154,6 @@ public class AccessDatabase {
 	}
 	
 	public synchronized void checkDatabase(String name, String uuid) {
-		Connection conn = getConnection();
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		
@@ -161,19 +161,19 @@ public class AccessDatabase {
 		String insert;
 		
 		try {
-			ps = conn.prepareStatement(query);
+			ps = connection.prepareStatement(query);
 			ps.setString(1, uuid);
 			rs = ps.executeQuery();
 			if(!rs.next()) {
 				insert = "INSERT INTO User (UUID, username) VALUES (?, ?)";
-				ps = conn.prepareStatement(insert);
+				ps = connection.prepareStatement(insert);
 				ps.setString(1, uuid);
 				ps.setString(2, name);
 				ps.executeUpdate();
 			} else if(rs.next()) {
 				if(!rs.getString("username").equals(name)) {
 					insert = "INSERT INTO User (username) VALUES ? WHERE UUID = (?)";
-				    try(PreparedStatement ps1 = conn.prepareStatement(insert);) {
+				    try(PreparedStatement ps1 = connection.prepareStatement(insert);) {
 						ps.setString(1, name);
 						ps.setString(2, uuid);
 
@@ -193,7 +193,6 @@ public class AccessDatabase {
 	@SuppressWarnings("deprecation")
 	public synchronized void getRep(Player player, String username) {
 		try {
-			Connection conn = getConnection();
 			PreparedStatement ps = null;
 			ResultSet rs = null;
 			String uuid = null;
@@ -209,7 +208,7 @@ public class AccessDatabase {
 						uuid = UUIDFetcher.getUUIDOf(username).toString();
 						query = "SELECT userId FROM User WHERE UUID = (?)";
 						try {
-							ps = conn.prepareStatement(query);
+							ps = connection.prepareStatement(query);
 							ps.setString(1, uuid);
 							rs = ps.executeQuery();
 							if(!rs.next()) {
@@ -230,7 +229,7 @@ public class AccessDatabase {
 				
 			query = "SELECT userId FROM Rep WHERE userId = (SELECT userId FROM User WHERE UUID = (?))";
 			try {
-				ps = conn.prepareStatement(query);
+				ps = connection.prepareStatement(query);
 				ps.setString(1, uuid);
 				rs = ps.executeQuery();
 				if(!rs.next()) {
@@ -244,7 +243,7 @@ public class AccessDatabase {
 					query = "SELECT r.date, r.repAmount, r.comment, u.username FROM Rep r JOIN  User u ON r.giverId = u.userId WHERE r.userId = (SELECT userId FROM User WHERE uuid = ?)";
 					
 					try {
-						ps = conn.prepareStatement(query);
+						ps = connection.prepareStatement(query);
 						ps.setString(1, uuid);
 						rs = ps.executeQuery();
 						while(rs.next()){
@@ -320,7 +319,6 @@ public class AccessDatabase {
 			comment = builder.toString();
 		}
 		try {
-			Connection conn = getConnection();	
 			PreparedStatement ps = null;
 			ResultSet rs = null;
 			
@@ -331,7 +329,7 @@ public class AccessDatabase {
 					+ "(SELECT userId FROM User WHERE UUID = "
 					+ "(SELECT uuid FROM User WHERE username = ?))";
 			try {
-				ps = conn.prepareStatement(query);
+				ps = connection.prepareStatement(query);
 				ps.setString(1, player.getUniqueId().toString());
 				ps.setString(2, args[0]);
 				rs = ps.executeQuery();
@@ -343,7 +341,7 @@ public class AccessDatabase {
 				int repId = rs.getInt("repId");
 				String delete = "DELETE FROM Rep WHERE repId = ?";
 				try {
-					ps = conn.prepareStatement(delete);
+					ps = connection.prepareStatement(delete);
 					ps.setInt(1, repId);
 					ps.executeUpdate();
 							
@@ -359,7 +357,7 @@ public class AccessDatabase {
 			
 			String insert = "INSERT INTO Rep (date, repAmount, giverId, comment, userId) VALUES (?, ?, (SELECT userId FROM User WHERE uuid = (?)), ?, (SELECT userId FROM User WHERE uuid = (SELECT uuid FROM User WHERE username = ?)))";
 			try {
-				ps = conn.prepareStatement(insert);
+				ps = connection.prepareStatement(insert);
 				ps.setString(1, date);
 				ps.setInt(2, rep);
 				ps.setString(3, giverUUID);

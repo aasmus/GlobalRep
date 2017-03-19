@@ -21,6 +21,7 @@
  */
 package com.austinasmus;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -31,6 +32,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitScheduler;
 
 public class RepDriver extends JavaPlugin implements Listener {
 	FileConfiguration config = getConfig();
@@ -39,6 +41,7 @@ public class RepDriver extends JavaPlugin implements Listener {
 	private String database;
 	private String username;
 	private String password;
+	private AccessDatabase accessDb;
 	
     @Override
     public void onEnable() {
@@ -51,7 +54,7 @@ public class RepDriver extends JavaPlugin implements Listener {
             this.username = config.getString("MYSQL.Username");
             this.password = config.getString("MYSQL.Password");
             
-            AccessDatabase accessDb = new AccessDatabase(host, port, database, username, password);
+            this.accessDb = new AccessDatabase(host, port, database, username, password);
             accessDb.generateTables();
     	}
     	
@@ -82,11 +85,17 @@ public class RepDriver extends JavaPlugin implements Listener {
     
     @EventHandler(priority = EventPriority.NORMAL)
     public void onPlayerJoin(PlayerJoinEvent event) {
-    	Player p = event.getPlayer();
-    	
-    	AccessDatabase accessDb = new AccessDatabase(host, port, database, username, password);
-    	accessDb.checkDatabase(p.getName(), p.getUniqueId().toString());
-    	
+    	BukkitScheduler scheduler = getServer().getScheduler();
+    	scheduler.runTaskLater(this, new Runnable() {
+            @SuppressWarnings("deprecation")
+			public void run() {
+            	Player p = event.getPlayer();
+            	
+            	if((System.currentTimeMillis() - Bukkit.getOfflinePlayer(p.getName()).getLastPlayed()) > 60000) {
+                	accessDb.checkDatabase(p.getName(), p.getUniqueId().toString());
+            	}
+            }
+    	}, 50);
     }
     
     @Override
@@ -98,37 +107,32 @@ public class RepDriver extends JavaPlugin implements Listener {
     	
     	if(cmd.getName().equalsIgnoreCase("rep")){
     		if(args.length == 0){
-        		player.sendMessage(ChatColor.RED + "===================" + ChatColor.GOLD + ChatColor.BOLD + " Global Rep " + ChatColor.RESET + ChatColor.RED + "===================");
-        		player.sendMessage(ChatColor.GOLD + "Use /rep <name> to see a player's rep!");
-        		player.sendMessage(ChatColor.GOLD + "Use /rep <name> positive <comment> to give positive rep!");
-        		player.sendMessage(ChatColor.GOLD + "Use /rep <name> negative <comment> to give negative rep!");
-        		player.sendMessage(ChatColor.RED + "==================================================");
+        		player.sendMessage(ChatColor.AQUA + "===================" + ChatColor.GREEN + ChatColor.BOLD + " Global Rep " + ChatColor.RESET + ChatColor.AQUA + "===================");
+        		player.sendMessage(ChatColor.GREEN + "Use /rep <name> to see a player's rep!");
+        		player.sendMessage(ChatColor.GREEN + "Use /rep <name> positive <comment> to give positive rep!");
+        		player.sendMessage(ChatColor.GREEN + "Use /rep <name> negative <comment> to give negative rep!");
+        		player.sendMessage(ChatColor.BLUE + "==================================================");
         		
     		} else {
-    	    	AccessDatabase accessDb = new AccessDatabase(host, port, database, username, password);
     			if(args.length == 1) {
     				accessDb.getRep(player, args[0]);
-    				
     			} else if(args.length >= 2) {
     				if(args[1].equalsIgnoreCase("positive")){
-    					for(int i = 0; i < 10; i++) {
+    					for(int i = 10; i > 0; i--) {
     						if(player.hasPermission("rep.amount." + i)) {
     							accessDb.addRep(args, player, i);
     							break;
-    							
     						}
     					}
     				}else if(args[1].equalsIgnoreCase("negative")) {
-    					for(int i = 0; i < 10; i++) {
+    					for(int i = 10; i > 0; i--) {
     						if(player.hasPermission("rep.amount." + i)) {
     							accessDb.addRep(args, player, -i);
     							break;
-    							
     						}
     					}
     				}else {
     					player.sendMessage(ChatColor.RED + args[1] + " is an unknown parameter. Parameters are: positive, negative");
-    					
     				}
     			}
     		}
