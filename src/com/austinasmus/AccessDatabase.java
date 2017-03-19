@@ -344,7 +344,6 @@ public class AccessDatabase {
 					ps = connection.prepareStatement(delete);
 					ps.setInt(1, repId);
 					ps.executeUpdate();
-							
 				} catch (SQLException e) {
 					e.printStackTrace();
 				}
@@ -370,26 +369,17 @@ public class AccessDatabase {
 					Player reciever = Bukkit.getPlayer(args[0]);
 					reciever.sendMessage(ChatColor.BLUE + "Your reputation has changed! View your rep with /rep " + reciever.getName() + ".");
 				} catch(NullPointerException npe) {
-					rs.close();
-					ps.close();
-					return;
+					//no handling necessary if player isn't online
 				}
 			} catch (SQLException e) {
 				player.sendMessage(ChatColor.RED + "That user doesn't exist!");
-				rs.close();
-				ps.close();
-				return;
 			} catch(NullPointerException npe) {
-				rs.close();
-				ps.close();
-				return;
+				npe.printStackTrace();
 			}
 			rs.close();
 			ps.close();
-			
 		} catch (SQLException e) {
 			e.printStackTrace();
-			return;
 		}
 		return;
 	}
@@ -425,7 +415,6 @@ public class AccessDatabase {
 			ps.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
-			return;
 		}
 	}
 }
