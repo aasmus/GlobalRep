@@ -21,7 +21,6 @@
  */
 package com.austinasmus;
 
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -83,7 +82,6 @@ public class RepDriver extends JavaPlugin implements Listener {
        
     }
     
-    @SuppressWarnings("deprecation")
 	@EventHandler(priority = EventPriority.NORMAL)
     public void onPlayerJoin(PlayerJoinEvent event) {
     	Player p = event.getPlayer();
