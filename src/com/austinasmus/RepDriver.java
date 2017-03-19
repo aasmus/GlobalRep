@@ -90,7 +90,6 @@ public class RepDriver extends JavaPlugin implements Listener {
             @SuppressWarnings("deprecation")
 			public void run() {
             	Player p = event.getPlayer();
-            	
             	if((System.currentTimeMillis() - Bukkit.getOfflinePlayer(p.getName()).getLastPlayed()) > 60000) {
                 	accessDb.checkDatabase(p.getName(), p.getUniqueId().toString());
             	}
@@ -111,7 +110,7 @@ public class RepDriver extends JavaPlugin implements Listener {
         		player.sendMessage(ChatColor.GREEN + "Use /rep <name> to see a player's rep!");
         		player.sendMessage(ChatColor.GREEN + "Use /rep <name> positive <comment> to give positive rep!");
         		player.sendMessage(ChatColor.GREEN + "Use /rep <name> negative <comment> to give negative rep!");
-        		player.sendMessage(ChatColor.BLUE + "==================================================");
+        		player.sendMessage(ChatColor.AQUA + "==================================================");
         		
     		} else {
     			if(args.length == 1) {
