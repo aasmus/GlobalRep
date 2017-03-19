@@ -94,7 +94,7 @@ public class RepDriver extends JavaPlugin implements Listener {
                 	accessDb.checkDatabase(p.getName(), p.getUniqueId().toString());
             	}
             }
-    	}, 20);
+    	}, 1L);
     }
     
     @Override
