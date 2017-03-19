@@ -324,93 +324,68 @@ public class AccessDatabase {
 			PreparedStatement ps = null;
 			ResultSet rs = null;
 			
-		try {
-			String query = "SELECT uuid FROM User WHERE username = ?";
-			ps = conn.prepareStatement(query);
-			ps.setString(1, args[0]);
-			rs = ps.executeQuery();
-			if(!rs.next()) {
-				player.sendMessage(ChatColor.RED + args[0] +" has never joined.");
-				return;
-			} else {
-				String uuid = rs.getString("UUID");
-				query = "SELECT userId FROM User WHERE UUID = ?";
+
+			String query = "SELECT repId FROM Rep WHERE giverId = "
+					+ "(SELECT userId FROM User WHERE UUID = ?)"
+					+ " AND userId = "
+					+ "(SELECT userId FROM User WHERE UUID = "
+					+ "(SELECT uuid FROM User WHERE username = ?))";
+			try {
+				ps = conn.prepareStatement(query);
+				ps.setString(1, player.getUniqueId().toString());
+				ps.setString(2, args[0]);
+				rs = ps.executeQuery();
+				
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+			if(rs.next()){
+				int repId = rs.getInt("repId");
+				String delete = "DELETE FROM Rep WHERE repId = ?";
 				try {
-					ps = conn.prepareStatement(query);
-					ps.setString(1, uuid);
-					rs = ps.executeQuery();
-					if(rs.next()) {
-						int userId = rs.getInt("userId");
-						query = "SELECT userId FROM User WHERE UUID = ?";
-						try {
-							ps = conn.prepareStatement(query);
-							ps.setString(1, player.getUniqueId().toString());
-							rs = ps.executeQuery();
-							int giverId = 0;
-							if(rs.next()){
-								giverId = rs.getInt("userId");
-								}
+					ps = conn.prepareStatement(delete);
+					ps.setInt(1, repId);
+					ps.executeUpdate();
 							
-							query = "SELECT repId FROM Rep WHERE giverId = ? AND userId = ?";
-							try {
-								ps = conn.prepareStatement(query);
-								ps.setInt(1, giverId);
-								ps.setInt(2, userId);
-								rs = ps.executeQuery();
-								
-							} catch (SQLException e) {
-								e.printStackTrace();
-							}
-							if(rs.next()){
-								int repId = rs.getInt("repId");
-								String delete = "DELETE FROM Rep WHERE repId = ?";
-								try {
-									ps = conn.prepareStatement(delete);
-									ps.setInt(1, repId);
-									ps.executeUpdate();
-									
-								} catch (SQLException e) {
-									e.printStackTrace();
-								}
-							}
-							LocalDateTime currentDate = LocalDateTime.now();
-							String date = currentDate.toString();
-							String[] time = date.split("T");
-							date = time[0];
-						
-							String insert = "INSERT INTO Rep (date, repAmount, giverId, comment, userId) VALUES (?, ?, ?, ?, ?)";
-							try {
-								ps = conn.prepareStatement(insert);
-								ps.setString(1, date);
-								ps.setInt(2, rep);
-								ps.setInt(3, giverId);
-								ps.setString(4, comment);
-								ps.setInt(5, userId);
-								ps.executeUpdate();
-								
-								Player reciever = Bukkit.getPlayer(args[0]);
-								player.sendMessage(ChatColor.BLUE + "Reputation added! You can use /rep " + args[0] + " to see it.");
-								try {
-								reciever.sendMessage(ChatColor.BLUE + "Your reputation has changed! View your rep with /rep " + reciever.getName() + ".");
-								} catch(NullPointerException npe) {
-									rs.close();
-									ps.close();
-									return;
-								}
-							} catch (SQLException e) {
-								e.printStackTrace();
-							}
-						} catch (SQLException e) {
-							e.printStackTrace();
-						}
-					}	
 				} catch (SQLException e) {
 					e.printStackTrace();
 				}
 			}
-		} catch(Exception e) {
-			e.printStackTrace();
-		}
+			LocalDateTime currentDate = LocalDateTime.now();
+			String date = currentDate.toString();
+			String[] time = date.split("T");
+			date = time[0];
+			String giverUUID = player.getUniqueId().toString();
+			
+			String insert = "INSERT INTO Rep (date, repAmount, giverId, comment, userId) VALUES (?, ?, (SELECT userId FROM User WHERE uuid = (?)), ?, (SELECT userId FROM User WHERE uuid = (SELECT uuid FROM User WHERE username = ?)))";
+			try {
+				ps = conn.prepareStatement(insert);
+				ps.setString(1, date);
+				ps.setInt(2, rep);
+				ps.setString(3, giverUUID);
+				ps.setString(4, comment);
+				ps.setString(5, args[0]);
+				ps.executeUpdate();
+					
+				player.sendMessage(ChatColor.BLUE + "Reputation added! You can use /rep " + args[0] + " to see it.");
+				try {
+					Player reciever = Bukkit.getPlayer(args[0]);
+					reciever.sendMessage(ChatColor.BLUE + "Your reputation has changed! View your rep with /rep " + reciever.getName() + ".");
+				} catch(NullPointerException npe) {
+					rs.close();
+					ps.close();
+					return;
+				}
+			} catch (SQLException e) {
+				player.sendMessage(ChatColor.RED + "That user doesn't exist!");
+				rs.close();
+				ps.close();
+				return;
+			} catch(NullPointerException npe) {
+				rs.close();
+				ps.close();
+				return;
+			}
 			rs.close();
 			ps.close();
 			
