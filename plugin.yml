@@ -1,6 +1,6 @@
 main: com.austinasmus.RepDriver
 name: GlobalRep
-version: 1.14
+version: 1.2
 author: legit_craft
 description: Cross Server Reputation Plugin
 commands:
@@ -13,6 +13,9 @@ permissions:
   rep.allow:
     description: grants access to /rep commands
     default: true
+  rep.delete:
+    description: allows user to delete reputation records
+    default: op
   rep.amount.1:
     description: gives the player a rep power of 1
     default: true

@@ -126,6 +126,12 @@ public class RepDriver extends JavaPlugin implements Listener {
     							break;
     						}
     					}
+    				}else if(args[0].equalsIgnoreCase("delete")) {
+    					if(player.hasPermission("rep.delete")) {
+    						accessDb.deleteRep(player, args);
+    					} else {
+    						player.sendMessage(ChatColor.RED + "You do not have permission do delete reputation records.");
+    					}
     				}else {
     					player.sendMessage(ChatColor.RED + args[1] + " is an unknown parameter. Parameters are: positive, negative");
     				}

@@ -393,4 +393,39 @@ public class AccessDatabase {
 		}
 		return;
 	}
+	
+	public synchronized void deleteRep(Player player, String[] args) {
+		try{
+			PreparedStatement ps = null;
+			ResultSet rs = null;
+			String query = "SELECT repId FROM Rep WHERE giverId = (SELECT userId FROM User WHERE UUID = (SELECT uuid FROM User WHERE username = ?)) AND userId = (SELECT userId FROM User WHERE UUID = (SELECT uuid FROM User WHERE username = ?))";
+			try {
+				ps = connection.prepareStatement(query);
+				ps.setString(1, args[2]);
+				ps.setString(2, args[1]);
+				rs = ps.executeQuery();
+				if(rs.next()) {
+					int repId = rs.getInt("repId");
+					String delete = "DELETE FROM Rep WHERE repId = ?";
+					try {
+						ps = connection.prepareStatement(delete);
+						ps.setInt(1, repId);
+						ps.executeUpdate();
+						player.sendMessage(ChatColor.RED + "Reputaton record deleted.");
+					} catch (SQLException e) {
+						e.printStackTrace();
+					}
+				} else {
+					player.sendMessage(ChatColor.RED + "That rep record doesn't exist!");
+				}
+			} catch (SQLException e) {
+				player.sendMessage(ChatColor.RED + "That rep record doesn't exist!");
+			}
+			rs.close();
+			ps.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return;
+		}
+	}
 }
