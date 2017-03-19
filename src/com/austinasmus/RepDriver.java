@@ -83,18 +83,18 @@ public class RepDriver extends JavaPlugin implements Listener {
        
     }
     
-    @EventHandler(priority = EventPriority.NORMAL)
+    @SuppressWarnings("deprecation")
+	@EventHandler(priority = EventPriority.NORMAL)
     public void onPlayerJoin(PlayerJoinEvent event) {
     	Player p = event.getPlayer();
-    	BukkitScheduler scheduler = getServer().getScheduler();
-    	scheduler.runTaskLaterAsynchronously(this, new Runnable() {
-            @SuppressWarnings("deprecation")
-			public void run() {
-            	if((System.currentTimeMillis() - Bukkit.getOfflinePlayer(p.getName()).getLastPlayed()) > 60000) {
-                	accessDb.checkDatabase(p.getName(), p.getUniqueId().toString());
-            	}
-            }
-    	}, 1L);
+    	if((System.currentTimeMillis() - Bukkit.getOfflinePlayer(p.getName()).getLastPlayed()) > 60000) {
+    		BukkitScheduler scheduler = getServer().getScheduler();
+    		scheduler.runTaskLaterAsynchronously(this, new Runnable() {
+    			public void run() {
+    				accessDb.checkDatabase(p.getName(), p.getUniqueId().toString());
+    			}
+    		}, 1L);
+    	}
     }
     
     @Override
