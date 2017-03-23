@@ -155,7 +155,7 @@ public class AccessDatabase {
 	
 	public synchronized void checkDatabase(String name, String uuid) {
 		try {
-			if(connection == null && !connection.isValid(0)) {
+			if(connection == null || !connection.isValid(0)) {
 				  getConnection();
 				}
 		} catch (SQLException e1) {
@@ -201,7 +201,7 @@ public class AccessDatabase {
 	@SuppressWarnings("deprecation")
 	public synchronized void getRep(Player player, String username) {
 		try {
-			if(connection == null && !connection.isValid(0)) {
+			if(connection == null || !connection.isValid(0)) {
 				  getConnection();
 				}
 		} catch (SQLException e1) {
@@ -326,7 +326,7 @@ public class AccessDatabase {
 		}
 		
 		try {
-			if(connection == null && !connection.isValid(0)) {
+			if(connection == null || !connection.isValid(0)) {
 				  getConnection();
 				}
 		} catch (SQLException e1) {
@@ -410,7 +410,7 @@ public class AccessDatabase {
 	
 	public synchronized void deleteRep(Player player, String[] args) {
 		try {
-			if(connection == null && !connection.isValid(0)) {
+			if(connection == null || !connection.isValid(0)) {
 				  getConnection();
 				}
 		} catch (SQLException e1) {
