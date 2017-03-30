@@ -180,7 +180,7 @@ public class AccessDatabase {
 				ps.executeUpdate();
 			} else if(rs.next()) {
 				if(!rs.getString("username").equals(name)) {
-					insert = "INSERT INTO User (username) VALUES ? WHERE UUID = (?)";
+					insert = "UPDATE User SET username = ? WHERE UUID = (?)";
 				    try(PreparedStatement ps1 = connection.prepareStatement(insert);) {
 						ps.setString(1, name);
 						ps.setString(2, uuid);
