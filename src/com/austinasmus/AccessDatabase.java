@@ -157,7 +157,7 @@ public class AccessDatabase {
 		try {
 			if(connection == null || !connection.isValid(0)) {
 				  getConnection();
-				}
+			}
 		} catch (SQLException e1) {
 			e1.printStackTrace();
 		}
@@ -165,9 +165,8 @@ public class AccessDatabase {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		
-		String query = "SELECT username FROM User WHERE UUID = ?";
-		String insert;
-		
+		String query = "SELECT username FROM User WHERE UUID = (?)";
+		String insert = null;
 		try {
 			ps = connection.prepareStatement(query);
 			ps.setString(1, uuid);
@@ -178,18 +177,24 @@ public class AccessDatabase {
 				ps.setString(1, uuid);
 				ps.setString(2, name);
 				ps.executeUpdate();
-			} else if(rs.next()) {
+			} else {
 				if(!rs.getString("username").equals(name)) {
-					insert = "UPDATE User SET username = ? WHERE UUID = (?)";
-				    try(PreparedStatement ps1 = connection.prepareStatement(insert);) {
+					insert = "UPDATE User SET username = ? WHERE UUID = ?";
+				    try {
+				    	ps = connection.prepareStatement(insert);
 						ps.setString(1, name);
 						ps.setString(2, uuid);
-
+						ps.executeUpdate();
 				    } catch(SQLException se) {
 				        se.printStackTrace();
 				    }
 				}
 			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		try {
 			ps.close();
 			rs.close();
 		} catch (SQLException e) {
