@@ -1,6 +1,6 @@
 main: com.austinasmus.RepDriver
 name: GlobalRep
-version: 1.5
+version: 1.6
 author: legit_craft
 description: Cross Server Reputation Plugin
 commands:
