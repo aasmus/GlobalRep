@@ -94,10 +94,12 @@ public class AccessDatabase {
 			
 			try {
 				ps = connection.prepareStatement(query);
+				ps.setQueryTimeout(15);
 				ps.setString(1, DB_NAME);
 				rs = ps.executeQuery();
 			} catch (SQLException e) {
 				e.printStackTrace();
+				System.out.println("[GlobalRep] An Error occured. Is the database down?");
 			}
 			String table;
 			if(!rs.next()){
@@ -108,20 +110,24 @@ public class AccessDatabase {
 
 				try {
 					ps = connection.prepareStatement(table);
+					ps.setQueryTimeout(15);
 					ps.executeUpdate();
 					System.out.println("[GlobalRep] User table created");
 				} catch (SQLException e) {
 					e.printStackTrace();
+					System.out.println("[GlobalRep] An Error occured. Is the database down?");
 				}
 			}
 			query = "SELECT table_name FROM information_schema.tables WHERE table_schema = ? AND table_name = 'Rep'";
 			
 			try {
 				ps = connection.prepareStatement(query);
+				ps.setQueryTimeout(15);
 				ps.setString(1, DB_NAME);
 				rs = ps.executeQuery();
 			} catch (SQLException e) {
 				e.printStackTrace();
+				System.out.println("[GlobalRep] An Error occured. Is the database down?");
 			}
 			
 			if(!rs.next()) {
@@ -137,10 +143,12 @@ public class AccessDatabase {
 
 				try {
 					ps = connection.prepareStatement(table);
+					ps.setQueryTimeout(15);
 					ps.executeUpdate();
 					System.out.println("[GlobalRep] Rep table created");
 				} catch (SQLException e) {
 					e.printStackTrace();
+					System.out.println("[GlobalRep] An Error occured. Is the database down?");
 				}
 			}		
 			rs.close();
@@ -166,32 +174,36 @@ public class AccessDatabase {
 		ResultSet rs = null;
 		
 		String query = "SELECT username FROM User WHERE UUID = (?)";
-		String insert = null;
 		try {
 			ps = connection.prepareStatement(query);
+			ps.setQueryTimeout(15);
 			ps.setString(1, uuid);
 			rs = ps.executeQuery();
 			if(!rs.next()) {
-				insert = "INSERT INTO User (UUID, username) VALUES (?, ?)";
-				ps = connection.prepareStatement(insert);
+				query = "INSERT INTO User (UUID, username) VALUES (?, ?)";
+				ps = connection.prepareStatement(query);
+				ps.setQueryTimeout(15);
 				ps.setString(1, uuid);
 				ps.setString(2, name);
 				ps.executeUpdate();
 			} else {
 				if(!rs.getString("username").equals(name)) {
-					insert = "UPDATE User SET username = ? WHERE UUID = ?";
+					query = "UPDATE User SET username = ? WHERE UUID = ?";
 				    try {
-				    	ps = connection.prepareStatement(insert);
+				    	ps = connection.prepareStatement(query);
+				    	ps.setQueryTimeout(15);
 						ps.setString(1, name);
 						ps.setString(2, uuid);
 						ps.executeUpdate();
 				    } catch(SQLException se) {
 				        se.printStackTrace();
+						System.out.println("[GlobalRep] An Error occured. Is the database down?");
 				    }
 				}
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
+			System.out.println("[GlobalRep] An Error occured. Is the database down?");
 		}
 		
 		try {
@@ -209,8 +221,10 @@ public class AccessDatabase {
 			if(connection == null || !connection.isValid(0)) {
 				  getConnection();
 				}
-		} catch (SQLException e1) {
-			e1.printStackTrace();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			player.sendMessage(ChatColor.RED + "An error has occured. Please tell a server administrator.");
+			System.out.println("[GlobalRep] An Error occured. Is the database down?");
 		}
 		
 		try {
@@ -230,6 +244,7 @@ public class AccessDatabase {
 						query = "SELECT userId FROM User WHERE UUID = (?)";
 						try {
 							ps = connection.prepareStatement(query);
+							ps.setQueryTimeout(15);
 							ps.setString(1, uuid);
 							rs = ps.executeQuery();
 							if(!rs.next()) {
@@ -238,6 +253,8 @@ public class AccessDatabase {
 							}
 						} catch (Exception e) {
 							e.printStackTrace();
+							player.sendMessage(ChatColor.RED + "An error has occured. Please tell a server administrator.");
+							System.out.println("[GlobalRep] An Error occured. Is the database down?");
 						}
 						
 						
@@ -251,6 +268,7 @@ public class AccessDatabase {
 			query = "SELECT userId FROM Rep WHERE userId = (SELECT userId FROM User WHERE UUID = (?))";
 			try {
 				ps = connection.prepareStatement(query);
+				ps.setQueryTimeout(15);
 				ps.setString(1, uuid);
 				rs = ps.executeQuery();
 				if(!rs.next()) {
@@ -265,6 +283,7 @@ public class AccessDatabase {
 					
 					try {
 						ps = connection.prepareStatement(query);
+						ps.setQueryTimeout(15);
 						ps.setString(1, uuid);
 						rs = ps.executeQuery();
 						while(rs.next()){
@@ -306,12 +325,16 @@ public class AccessDatabase {
 						}
 					} catch (SQLException e) {
 						e.printStackTrace();
+						player.sendMessage(ChatColor.RED + "An error has occured. Please tell a server administrator.");
+						System.out.println("[GlobalRep] An Error occured. Is the database down?");
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
 				}
 			} catch (SQLException e) {
 				e.printStackTrace();
+				player.sendMessage(ChatColor.RED + "An error has occured. Please tell a server administrator.");
+				System.out.println("[GlobalRep] An Error occured. Is the database down?");
 			}
 			ps.close();
 			rs.close();
@@ -336,6 +359,8 @@ public class AccessDatabase {
 				}
 		} catch (SQLException e1) {
 			e1.printStackTrace();
+			player.sendMessage(ChatColor.RED + "An error has occured. Please tell a server administrator.");
+			System.out.println("[GlobalRep] An Error occured. Is the database down?");
 		}
 		
 		String comment = "";	
@@ -359,22 +384,28 @@ public class AccessDatabase {
 					+ "(SELECT uuid FROM User WHERE username = ?))";
 			try {
 				ps = connection.prepareStatement(query);
+				ps.setQueryTimeout(15);
 				ps.setString(1, player.getUniqueId().toString());
 				ps.setString(2, args[0]);
 				rs = ps.executeQuery();
 				
 			} catch (SQLException e) {
 				e.printStackTrace();
+				player.sendMessage(ChatColor.RED + "An error has occured. Please tell a server administrator.");
+				System.out.println("[GlobalRep] An Error occured. Is the database down?");
 			}
 			if(rs.next()){
 				int repId = rs.getInt("repId");
 				String delete = "DELETE FROM Rep WHERE repId = ?";
 				try {
 					ps = connection.prepareStatement(delete);
+					ps.setQueryTimeout(15);
 					ps.setInt(1, repId);
 					ps.executeUpdate();
 				} catch (SQLException e) {
 					e.printStackTrace();
+					player.sendMessage(ChatColor.RED + "An error has occured. Please tell a server administrator.");
+					System.out.println("[GlobalRep] An Error occured. Is the database down?");
 				}
 			}
 			LocalDateTime currentDate = LocalDateTime.now();
@@ -383,9 +414,10 @@ public class AccessDatabase {
 			date = time[0];
 			String giverUUID = player.getUniqueId().toString();
 			
-			String insert = "INSERT INTO Rep (date, repAmount, giverId, comment, userId) VALUES (?, ?, (SELECT userId FROM User WHERE uuid = (?)), ?, (SELECT userId FROM User WHERE uuid = (SELECT uuid FROM User WHERE username = ?)))";
+			query = "INSERT INTO Rep (date, repAmount, giverId, comment, userId) VALUES (?, ?, (SELECT userId FROM User WHERE uuid = (?)), ?, (SELECT userId FROM User WHERE uuid = (SELECT uuid FROM User WHERE username = ?)))";
 			try {
-				ps = connection.prepareStatement(insert);
+				ps = connection.prepareStatement(query);
+				ps.setQueryTimeout(15);
 				ps.setString(1, date);
 				ps.setInt(2, rep);
 				ps.setString(3, giverUUID);
@@ -401,7 +433,7 @@ public class AccessDatabase {
 					//no handling necessary if player isn't online
 				}
 			} catch (SQLException e) {
-				player.sendMessage(ChatColor.RED + "That user doesn't exist!");
+				player.sendMessage(ChatColor.RED + "That player does not exist!");
 			} catch(NullPointerException npe) {
 				npe.printStackTrace();
 			}
@@ -418,8 +450,10 @@ public class AccessDatabase {
 			if(connection == null || !connection.isValid(0)) {
 				  getConnection();
 				}
-		} catch (SQLException e1) {
-			e1.printStackTrace();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			player.sendMessage(ChatColor.RED + "An error has occured. Please tell a server administrator.");
+			System.out.println("[GlobalRep] An Error occured. Is the database down?");
 		}
 		
 		try{
@@ -428,6 +462,7 @@ public class AccessDatabase {
 			String query = "SELECT repId FROM Rep WHERE giverId = (SELECT userId FROM User WHERE UUID = (SELECT uuid FROM User WHERE username = ?)) AND userId = (SELECT userId FROM User WHERE UUID = (SELECT uuid FROM User WHERE username = ?))";
 			try {
 				ps = connection.prepareStatement(query);
+				ps.setQueryTimeout(15);
 				ps.setString(1, args[2]);
 				ps.setString(2, args[1]);
 				rs = ps.executeQuery();
@@ -436,11 +471,14 @@ public class AccessDatabase {
 					String delete = "DELETE FROM Rep WHERE repId = ?";
 					try {
 						ps = connection.prepareStatement(delete);
+						ps.setQueryTimeout(15);
 						ps.setInt(1, repId);
 						ps.executeUpdate();
 						player.sendMessage(ChatColor.RED + "Reputaton record deleted.");
 					} catch (SQLException e) {
 						e.printStackTrace();
+						player.sendMessage(ChatColor.RED + "An error has occured. Please tell a server administrator.");
+						System.out.println("[GlobalRep] An Error occured. Is the database down?");
 					}
 				} else {
 					player.sendMessage(ChatColor.RED + "That rep record doesn't exist!");
