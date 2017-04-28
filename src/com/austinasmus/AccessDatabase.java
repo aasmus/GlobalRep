@@ -163,11 +163,11 @@ public class AccessDatabase {
 	
 	public synchronized void checkDatabase(String name, String uuid) {
 		try {
-			if(connection == null || !connection.isValid(0)) {
+			if(connection == null || connection.isClosed()) {
 				  getConnection();
 			}
-		} catch (SQLException e1) {
-			e1.printStackTrace();
+		} catch (SQLException e) {
+			e.printStackTrace();
 		}
 		
 		PreparedStatement ps = null;
@@ -218,9 +218,9 @@ public class AccessDatabase {
 	@SuppressWarnings("deprecation")
 	public synchronized void getRep(Player player, String username) {
 		try {
-			if(connection == null || !connection.isValid(0)) {
+			if(connection == null || connection.isClosed()) {
 				  getConnection();
-				}
+			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 			player.sendMessage(ChatColor.RED + "An error has occured. Please tell a server administrator.");
@@ -354,11 +354,11 @@ public class AccessDatabase {
 		}
 		
 		try {
-			if(connection == null || !connection.isValid(0)) {
+			if(connection == null || connection.isClosed()) {
 				  getConnection();
-				}
-		} catch (SQLException e1) {
-			e1.printStackTrace();
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
 			player.sendMessage(ChatColor.RED + "An error has occured. Please tell a server administrator.");
 			System.out.println("[GlobalRep] An Error occured. Is the database down?");
 		}
@@ -447,9 +447,9 @@ public class AccessDatabase {
 	
 	public synchronized void deleteRep(Player player, String[] args) {
 		try {
-			if(connection == null || !connection.isValid(0)) {
+			if(connection == null || connection.isClosed()) {
 				  getConnection();
-				}
+			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 			player.sendMessage(ChatColor.RED + "An error has occured. Please tell a server administrator.");
