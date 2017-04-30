@@ -164,6 +164,7 @@ public class AccessDatabase {
 	public synchronized void checkDatabase(String name, String uuid) {
 		try {
 			if(connection == null || connection.isClosed()) {
+				 this.connection = getConnection();
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -218,6 +219,7 @@ public class AccessDatabase {
 	public synchronized void getRep(Player player, String username) {
 		try {
 			if(connection == null || connection.isClosed()) {
+				 this.connection = getConnection();
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -353,6 +355,7 @@ public class AccessDatabase {
 		
 		try {
 			if(connection == null || connection.isClosed()) {
+				 this.connection = getConnection();
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -445,6 +448,7 @@ public class AccessDatabase {
 	public synchronized void deleteRep(Player player, String[] args) {
 		try {
 			if(connection == null || connection.isClosed()) {
+				 this.connection = getConnection();
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
