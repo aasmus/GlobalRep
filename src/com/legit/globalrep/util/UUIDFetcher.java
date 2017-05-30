@@ -19,7 +19,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.evilmidget38;
+package com.legit.globalrep.util;
 
 import com.google.common.collect.ImmutableList;
 import org.json.simple.JSONArray;
