@@ -22,6 +22,9 @@
 package com.legit.globalrep.util;
 
 import com.google.common.collect.ImmutableList;
+
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -113,5 +116,25 @@ public class UUIDFetcher implements Callable<Map<String, UUID>> {
 
     public static UUID getUUIDOf(String name) throws Exception {
         return new UUIDFetcher(Arrays.asList(name)).call().get(name);
+    }
+    
+	@SuppressWarnings("deprecation")
+    public static UUID findUUID(String username) {
+    	UUID uuid = null;
+		if(Bukkit.getServer().getPlayer(username) != null) {
+			uuid = Bukkit.getServer().getPlayer(username).getUniqueId();
+		} else {
+			OfflinePlayer op = Bukkit.getOfflinePlayer(username);
+			if (op.hasPlayedBefore()) {
+			    uuid = op.getUniqueId();
+			} else {
+				try {
+					uuid = getUUIDOf(username);
+				} catch (Exception e) {
+					
+				}
+			}
+		}
+		return uuid;
     }
 }

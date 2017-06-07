@@ -1,4 +1,6 @@
 /*
+ * MIT License
+ * 
  * Copyright (c) 2017 Austin Asmus
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -19,23 +21,21 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.legit.globalrep.server.sql;
+package com.legit.globalrep.sql;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import com.legit.globalrep.util.Message;
+import com.legit.globalrep.chat.Message;
 
 public class DatabaseConnection {
 	
-	private static String DB_IP;
-	private static int DB_PORT;
-	private static String DB_NAME;
-	private static String user;
-	private static String pass;
+	private final String DB_IP;
+	private final int DB_PORT;
+	private final String DB_NAME;
+	private final String user;
+	private final String pass;
 
 	public DatabaseConnection(String databaseIp, int databasePort, String databaseName, String username, String password) {
 		DB_IP = databaseIp;
@@ -45,6 +45,11 @@ public class DatabaseConnection {
 		pass = password;
 	}
 
+	/**
+	 * getConnection - used to get a connection to the database
+	 * 
+	 * @return - returns the open connection
+	 */
 	public Connection getConnection() {
 		try {
 			Class.forName("com.mysql.jdbc.Driver").newInstance();
@@ -73,24 +78,21 @@ public class DatabaseConnection {
 		return conn;
 	}
 	
-	public static void cleanConnection(PreparedStatement ps, ResultSet rs){
-		try{
-			if(rs != null && !rs.isClosed())
-				rs.close();
-			if(ps != null && !ps.isClosed())
-				ps.close();
-		} catch(SQLException e){
-			Message.genericErrorSystem(e);
+	/**
+	 * checkConnection - used to check if database connection is still open
+	 * 
+	 * @param connection - the connection being checked
+	 * @return - returns open connection
+	 */
+	public Connection checkConnection(Connection connection) {
+		try {
+			if(connection == null || connection.isClosed()) {
+				 connection = getConnection();
+			}
+		} catch (SQLException e) {
+			Message.databaseError(e);
 		}
+		return connection;
 	}
 	
-	public static void cleanConnection(PreparedStatement ps){
-		try{
-			if(ps != null && !ps.isClosed())
-				ps.close();
-		} catch(SQLException e){
-			Message.genericErrorSystem(e);
-		}
-	}
-
 }
