@@ -160,40 +160,40 @@ public class DatabaseAccess {
 	 */
 	public void getRep(Player player, String username, UUID uuid, int page) {
 		dbConn.checkConnection(connection);
-			int userId = getUserId(uuid);
-			PreparedStatement ps = null;
-			ResultSet rs = null;
-			if (userId == 0) {
-				Message.noRep(player, username);
-				return;
-			} else {
-				String query = "SELECT r.date, r.repAmount, r.comment, u.username FROM Rep r JOIN  User u ON r.giverId = u.userId WHERE r.userId = (SELECT userId FROM User WHERE uuid = ?) ORDER BY repId DESC";
-				try {
-					ps = connection.prepareStatement(query);
-					ps.setQueryTimeout(5);
-					ps.setString(1, uuid.toString());
-					rs = ps.executeQuery();
-					List<Rep> reps = Collections.synchronizedList(new ArrayList<Rep>());
-					int numRep = 0;
-					while (rs.next()) {
-						Rep rep = new Rep(rs.getInt("r.repAmount"), rs.getString("r.date"), rs.getString("u.username"),
-								rs.getString("r.comment"));
-						reps.add(rep);
-						numRep++;
-					}
-					int totalPages = (numRep + 10 - 1) / 10;
-					RepCommand.displayRep(player, username, reps, page, totalPages);
-					} catch (Exception e) {
-					Message.databaseError(e);
-					Message.genericErrorPlayer(player);
-				}
-			}
+		int userId = getUserId(uuid);
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		if (userId == 0) {
+			Message.noRep(player, username);
+			return;
+		} else {
+			String query = "SELECT r.date, r.repAmount, r.comment, u.username FROM Rep r JOIN  User u ON r.giverId = u.userId WHERE r.userId = (SELECT userId FROM User WHERE uuid = ?) ORDER BY repId DESC";
 			try {
-				ps.close();
-				rs.close();
-			} catch (SQLException e) {
-				Message.genericErrorSystem(e);
+				ps = connection.prepareStatement(query);
+				ps.setQueryTimeout(5);
+				ps.setString(1, uuid.toString());
+				rs = ps.executeQuery();
+				List<Rep> reps = Collections.synchronizedList(new ArrayList<Rep>());
+				int numRep = 0;
+				while (rs.next()) {
+					Rep rep = new Rep(rs.getInt("r.repAmount"), rs.getString("r.date"), rs.getString("u.username"),
+							rs.getString("r.comment"));
+					reps.add(rep);
+					numRep++;
+				}
+				int totalPages = (numRep + 10 - 1) / 10;
+				RepCommand.displayRep(player, username, reps, page, totalPages);
+			} catch (Exception e) {
+				Message.databaseError(e);
+				Message.genericErrorPlayer(player);
 			}
+		}
+		try {
+			ps.close();
+			rs.close();
+		} catch (SQLException e) {
+			Message.genericErrorSystem(e);
+		}
 	}
 	
 	/**
@@ -260,6 +260,7 @@ public class DatabaseAccess {
 	 * @param repId - repId from the "Rep" table
 	 */
 	public boolean removeRep(int repId) {
+		dbConn.checkConnection(connection);
 		String delete = "DELETE FROM Rep WHERE repId = ?";
 		PreparedStatement ps = null;
 		try {
@@ -287,6 +288,7 @@ public class DatabaseAccess {
 	 * @return - true = has logged in, false = hasn't logged in
 	 */
 	public boolean hasLoggedIn(UUID uuid) {
+		dbConn.checkConnection(connection);
 		String query = "SELECT userId FROM User WHERE UUID = (?)";
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -350,6 +352,7 @@ public class DatabaseAccess {
 	 * @return - returns repId if exists or 0 if doesn't exist
 	 */
 	private int getRepIdbyUUID(UUID uuid, String username) {
+		dbConn.checkConnection(connection);
 		int repId = 0;
 		String query = "SELECT repId FROM Rep WHERE giverId = "
 				+ "(SELECT userId FROM User WHERE UUID = ?)"
