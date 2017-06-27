@@ -23,6 +23,7 @@
  */
 package com.legit.globalrep.chat;
 
+import org.apache.commons.lang.StringUtils;
 import org.bukkit.entity.Player;
 
 import net.md_5.bungee.api.ChatColor;
@@ -50,14 +51,14 @@ public class Message {
 	}
 	
 	public static void help(Player player) {
-		player.sendMessage(ChatColor.AQUA + "====================" + ChatColor.GREEN + ChatColor.BOLD + " Global Rep " + ChatColor.RESET + ChatColor.AQUA + "====================");
+		player.sendMessage(ChatColor.AQUA + "§m" + StringUtils.repeat(" ", 31) + ChatColor.GREEN + ChatColor.BOLD + " Global Rep " + ChatColor.RESET + ChatColor.AQUA + "§m" + StringUtils.repeat(" ", 31));
 		player.sendMessage(ChatColor.GREEN + "Use /rep <name> to see a player's rep!");
 		player.sendMessage(ChatColor.GREEN + "Use /rep <name> positive <comment> to give positive rep!");
 		player.sendMessage(ChatColor.GREEN + "Use /rep <name> negative <comment> to give negative rep!");
 		if(player.hasPermission("rep.delete")) {
 			player.sendMessage(ChatColor.GREEN + "Use /rep delete <reciever> <giver> to remove rep!");
 		}
-		player.sendMessage(ChatColor.AQUA + "====================================================");
+		printLine(player);
 	}
 	
 	private static String chatPrefix() {
@@ -110,7 +111,7 @@ public class Message {
 	
 	public static void repHeader(Player player, String username) {
 		player.sendMessage(ChatColor.GREEN + "" + ChatColor.BOLD + username + "'s Reputation:");
-		player.sendMessage(ChatColor.AQUA + "====================================================");
+		printLine(player);
 	}
 	
 	public static void repPositive(Player player, int amount, String date, String username, String comment) {
@@ -124,48 +125,48 @@ public class Message {
 	public static void navigate(Player player, String username, int page, int totalPages) {
 		if(page == 1) {
 			if(page == totalPages) {
-				TextComponent prev = new TextComponent("<--");
+				TextComponent prev = new TextComponent("<§m--");
 				prev.setColor(ChatColor.GRAY);
 				
 				TextComponent middle = new TextComponent(" Page " + page + "/" + totalPages + " ");
 				
-				TextComponent next = new TextComponent("-->");
+				TextComponent next = new TextComponent("§m--§r§7>");
 				next.setColor(ChatColor.GRAY);
 				player.spigot().sendMessage(prev, middle, next);
 			} else {
-				TextComponent prev = new TextComponent("<--");
+				TextComponent prev = new TextComponent("<§m--");
 				prev.setColor(ChatColor.GRAY);
 				
 				TextComponent middle = new TextComponent(" Page " + page + "/" + totalPages + " ");
 				
-				TextComponent next = new TextComponent("-->");
+				TextComponent next = new TextComponent("§m--§r§b>");
 				next.setColor(ChatColor.AQUA);
 				next.setClickEvent( new ClickEvent (ClickEvent.Action.RUN_COMMAND, "/rep " + username + " page " + (page+1)));
 				next.setHoverEvent( new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder("Next page.").create()));
 				player.spigot().sendMessage(prev, middle, next);
 			}
 		} else if(page != totalPages) {
-			TextComponent prev = new TextComponent("<--");
+			TextComponent prev = new TextComponent("<§m--");
 			prev.setColor(ChatColor.AQUA);
 			prev.setClickEvent( new ClickEvent (ClickEvent.Action.RUN_COMMAND, "/rep " + username + " page " + (page-1)));
 			prev.setHoverEvent( new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder("Previous page.").create()));
 			
 			TextComponent middle = new TextComponent(" Page " + page + "/" + totalPages + " ");
 			
-			TextComponent next = new TextComponent("-->");
+			TextComponent next = new TextComponent("§m--§r§b>");
 			next.setColor(ChatColor.AQUA);
 			next.setClickEvent( new ClickEvent (ClickEvent.Action.RUN_COMMAND, "/rep " + username + " page " + (page+1)));
 			next.setHoverEvent( new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder("Next page.").create()));
 			player.spigot().sendMessage(prev, middle, next);
 		} else if(page == totalPages) {
-			TextComponent prev = new TextComponent("<--");
+			TextComponent prev = new TextComponent("<§m--");
 			prev.setColor(ChatColor.AQUA);
 			prev.setClickEvent( new ClickEvent (ClickEvent.Action.RUN_COMMAND, "/rep " + username + " page " + (page-1)));
 			prev.setHoverEvent( new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder("Previous page.").create()));
 			
 			TextComponent middle = new TextComponent(" Page " + page + "/" + totalPages + " ");
 			
-			TextComponent next = new TextComponent("-->");
+			TextComponent next = new TextComponent("§m--§r§7>");
 			next.setColor(ChatColor.GRAY);
 			player.spigot().sendMessage(prev, middle, next);
 		}
@@ -184,6 +185,10 @@ public class Message {
 	}
 	
 	public static void repFooter(Player player) {
-		player.sendMessage(ChatColor.AQUA + "====================================================");
+		printLine(player);
+	}
+	
+	private static void printLine(Player player) {
+		player.sendMessage(ChatColor.AQUA + "§m" + StringUtils.repeat(" ", 80));
 	}
 }

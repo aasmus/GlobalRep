@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.legit.globalrep.event;
+package com.legit.globalrep.commands;
 
 import java.util.UUID;
 
@@ -157,20 +157,24 @@ public class RepCommand implements CommandExecutor {
 		int resultAmount = page * 10;
 		if(page <= totalPages && page > 0) {
 			Message.repHeader(player, username);
+			Rep rep;
 			if(reps.size()-resultAmount <= 0) {
 				if(page == 1) {
-					for(int i = reps.size()-1; i >= 0; i--) {
-						sendRep(player, reps, i);
+					for(int i = 0; i < reps.size(); i++) {
+						rep = reps.get(i);
+						sendRep(player, rep);
 					}
 				} else {
-					int remaining = reps.size()%(resultAmount-11);
-					for(int i = reps.size()-1; i > reps.size()-remaining; i--) {
-						sendRep(player, reps, i);
+					int remaining = reps.size()%(resultAmount-10);
+					for(int i = reps.size()-remaining; i < reps.size(); i++) {
+						rep = reps.get(i);
+						sendRep(player, rep);
 					}
 				}
 			} else {
-				for(int i = resultAmount-1; i >= resultAmount-10; i--) {
-					sendRep(player, reps, i);
+				for(int i = resultAmount-10; i < resultAmount; i++) {
+					rep = reps.get(i);
+					sendRep(player, rep);
 				}
 			}
 			
@@ -178,11 +182,11 @@ public class RepCommand implements CommandExecutor {
 			
 			int positiveRep = 0;
 			int negativeRep = 0;
-			for(Rep rep : reps){
-				if(rep.getAmount() > 0) {
-					positiveRep += rep.getAmount();
-				} else if (rep.getAmount() < 0) {
-					negativeRep += rep.getAmount();
+			for(Rep record : reps){
+				if(record.getAmount() > 0) {
+					positiveRep += record.getAmount();
+				} else if (record.getAmount() < 0) {
+					negativeRep += record.getAmount();
 				}
 			}
 			
@@ -207,11 +211,11 @@ public class RepCommand implements CommandExecutor {
 	 * @param reps - synchronized List array containing rep objects
 	 * @param i - counter variable
 	 */
-	private static void sendRep(Player player, java.util.List<Rep> reps, int i) {
-		if(reps.get(i).getAmount() > 0){
-			Message.repPositive(player, reps.get(i).getAmount(), reps.get(i).getDate(), reps.get(i).getUsername(), reps.get(i).getComment());
+	private static void sendRep(Player player, Rep rep) {
+		if(rep.getAmount() > 0){
+			Message.repPositive(player, rep.getAmount(), rep.getDate(), rep.getUsername(), rep.getComment());
 		} else {
-			Message.repNegative(player, reps.get(i).getAmount(), reps.get(i).getDate(), reps.get(i).getUsername(), reps.get(i).getComment());
+			Message.repNegative(player, rep.getAmount(), rep.getDate(), rep.getUsername(), rep.getComment());
 		}
 	}
 

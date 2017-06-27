@@ -37,7 +37,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import com.legit.globalrep.chat.Message;
-import com.legit.globalrep.event.RepCommand;
+import com.legit.globalrep.commands.RepCommand;
 import com.legit.globalrep.object.Rep;
 
 public class DatabaseAccess {

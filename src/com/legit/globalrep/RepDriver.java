@@ -25,15 +25,11 @@ package com.legit.globalrep;
 
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitScheduler;
 
-import com.legit.globalrep.event.RepCommand;
+import com.legit.globalrep.commands.RepCommand;
+import com.legit.globalrep.event.PlayerJoin;
 import com.legit.globalrep.sql.DatabaseAccess;
 
 public class RepDriver extends JavaPlugin implements Listener {
@@ -48,6 +44,7 @@ public class RepDriver extends JavaPlugin implements Listener {
     		this.dbAccess = new DatabaseAccess(config.getString("MYSQL.Host"), config.getInt("MYSQL.Port"), config.getString("MYSQL.Database"), config.getString("MYSQL.Username"), config.getString("MYSQL.Password"));
         	dbAccess.createTable("User");
         	dbAccess.createTable("Rep");
+        	Bukkit.getPluginManager().registerEvents(new PlayerJoin(this, dbAccess), this);
         	this.getCommand("rep").setExecutor(new RepCommand(dbAccess));
     	} else {
         	if(!config.contains("MYSQL.Host")) {
@@ -76,19 +73,4 @@ public class RepDriver extends JavaPlugin implements Listener {
     	Bukkit.getScheduler().cancelTasks(this);
     }
     
-	/**
-	 * OnPlayerJoin: checks if player exists in database and for name changes
-	 * 
-	 * @param event
-	 */
-	@EventHandler(priority = EventPriority.NORMAL)
-    public void onPlayerJoin(PlayerJoinEvent event) {
-    	Player p = event.getPlayer();
-   		BukkitScheduler scheduler = getServer().getScheduler();
-   		scheduler.runTaskLaterAsynchronously(this, new Runnable() {
-   			public void run() {
-   				dbAccess.checkDatabase(p.getName(), p.getUniqueId().toString());
-   			}
-    	}, 1L);
-    }
 }

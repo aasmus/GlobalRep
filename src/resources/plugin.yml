@@ -1,6 +1,6 @@
 main: com.legit.globalrep.server.RepDriver
 name: GlobalRep
-version: 1.7
+version: 1.7.1
 author: legit_craft
 description: Cross Server Reputation Plugin
 commands:
