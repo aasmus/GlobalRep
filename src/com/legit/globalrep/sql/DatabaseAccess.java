@@ -57,7 +57,10 @@ public class DatabaseAccess {
 	 * @param name - name of the MySQL table to be created
 	 */
 	public void createTable(String name) {
-		dbConn.checkConnection(connection);
+		this.connection = dbConn.checkConnection(connection);
+		if(connection == null) {
+			return;
+		}
 		String query = "SELECT table_name FROM information_schema.tables WHERE table_schema = ? AND table_name = ?";
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -113,7 +116,10 @@ public class DatabaseAccess {
 	 * @param uuid - UUID of player having username checked
 	 */
 	public synchronized void checkDatabase(String name, String uuid) {
-		dbConn.checkConnection(connection);
+		this.connection = dbConn.checkConnection(connection);
+		if(connection == null) {
+			return;
+		}
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
@@ -159,7 +165,10 @@ public class DatabaseAccess {
 	 * @param page - rep page # that command sender is currently on
 	 */
 	public void getRep(Player player, String username, UUID uuid, int page) {
-		dbConn.checkConnection(connection);
+		this.connection = dbConn.checkConnection(connection);
+		if(connection == null) {
+			return;
+		}
 		int userId = getUserId(uuid);
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -210,7 +219,10 @@ public class DatabaseAccess {
 			return;
 		}
 
-		dbConn.checkConnection(connection);
+		this.connection = dbConn.checkConnection(connection);
+		if(connection == null) {
+			return;
+		}
 		int repId = getRepIdbyUUID(player.getUniqueId(), username);
 		if (repId != 0) {
 			removeRep(repId);
@@ -260,7 +272,10 @@ public class DatabaseAccess {
 	 * @param repId - repId from the "Rep" table
 	 */
 	public boolean removeRep(int repId) {
-		dbConn.checkConnection(connection);
+		this.connection = dbConn.checkConnection(connection);
+		if(connection == null) {
+			return false;
+		}
 		String delete = "DELETE FROM Rep WHERE repId = ?";
 		PreparedStatement ps = null;
 		try {
@@ -288,7 +303,10 @@ public class DatabaseAccess {
 	 * @return - true = has logged in, false = hasn't logged in
 	 */
 	public boolean hasLoggedIn(UUID uuid) {
-		dbConn.checkConnection(connection);
+		this.connection = dbConn.checkConnection(connection);
+		if(connection == null) {
+			return false;
+		}
 		String query = "SELECT userId FROM User WHERE UUID = (?)";
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -321,7 +339,10 @@ public class DatabaseAccess {
 	 * @return - returns a userId or 0 if not found
 	 */
 	private int getUserId(UUID uuid) {
-		dbConn.checkConnection(connection);
+		this.connection = dbConn.checkConnection(connection);
+		if(connection == null) {
+			return 0;
+		}
 		String query = "SELECT userId FROM Rep WHERE userId = (SELECT userId FROM User WHERE UUID = (?))";
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -352,7 +373,10 @@ public class DatabaseAccess {
 	 * @return - returns repId if exists or 0 if doesn't exist
 	 */
 	private int getRepIdbyUUID(UUID uuid, String username) {
-		dbConn.checkConnection(connection);
+		this.connection = dbConn.checkConnection(connection);
+		if(connection == null) {
+			return 0;
+		}
 		int repId = 0;
 		String query = "SELECT repId FROM Rep WHERE giverId = "
 				+ "(SELECT userId FROM User WHERE UUID = ?)"
@@ -391,7 +415,10 @@ public class DatabaseAccess {
 	 * @return - returns repId if exists or 0 if doesn't exist
 	 */
 	public int getrepIdByUsername(Player player, String reciever, String giver) {
-		dbConn.checkConnection(connection);
+		this.connection = dbConn.checkConnection(connection);
+		if(connection == null) {
+			return 0;
+		}
 		int repId = 0;
 		PreparedStatement ps = null;
 		ResultSet rs = null;

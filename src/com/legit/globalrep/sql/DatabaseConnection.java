@@ -56,22 +56,18 @@ public class DatabaseConnection {
 		} catch (InstantiationException e) {
 			System.out.println("InstantiationException: ");
 			Message.genericErrorSystem(e);
-			throw new RuntimeException(e);
 		} catch (IllegalAccessException e) {
 			System.out.println("IllegalAccessException: ");
 			Message.genericErrorSystem(e);
-			throw new RuntimeException(e);
 		} catch (ClassNotFoundException e) {
 			System.out.println("ClassNotFoundException: ");
 			Message.genericErrorSystem(e);
-			throw new RuntimeException(e);
 		}
 
 		Connection conn = null;
 
 		try {
 			conn = DriverManager.getConnection("jdbc:mysql://" + DB_IP + ":" + DB_PORT + "/" + DB_NAME, user, pass);
-
 		} catch (SQLException e) {
 			Message.databaseError(e);
 		}

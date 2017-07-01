@@ -173,15 +173,15 @@ public class Message {
 	}
 	
 	public static void repTotalPositive(Player player, int positiveRep, int negativeRep) {
-		player.sendMessage(ChatColor.GREEN + "Positive Rep: " + positiveRep + " " + ChatColor.RED + "Negative Rep: " + Math.abs(negativeRep) + ChatColor.BLUE + " Total Reputation: " + ChatColor.GREEN + (positiveRep + negativeRep));
+		player.sendMessage(ChatColor.GREEN + "Positive Rep: " + positiveRep + " " + ChatColor.RED + "Negative Rep: " + Math.abs(negativeRep) + ChatColor.BLUE + " Total Rep: " + ChatColor.GREEN + (positiveRep + negativeRep));
 	}
 	
 	public static void repTotalNegative(Player player, int positiveRep, int negativeRep) {
-		player.sendMessage(ChatColor.GREEN + "Positive Rep: " + positiveRep + " " + ChatColor.RED + "Negative Rep: " + Math.abs(negativeRep) + ChatColor.BLUE + " Total Reputation: " + ChatColor.RED + (positiveRep + negativeRep));
+		player.sendMessage(ChatColor.GREEN + "Positive Rep: " + positiveRep + " " + ChatColor.RED + "Negative Rep: " + Math.abs(negativeRep) + ChatColor.BLUE + " Total Rep: " + ChatColor.RED + (positiveRep + negativeRep));
 	}
 	
 	public static void repTotalZero(Player player, int positiveRep, int negativeRep) {
-		player.sendMessage(ChatColor.GREEN + "Positive Rep: " + positiveRep + " " + ChatColor.RED + "Negative Rep: " + Math.abs(negativeRep) + ChatColor.BLUE + " Total Reputation: " + ChatColor.GRAY + (positiveRep + negativeRep));
+		player.sendMessage(ChatColor.GREEN + "Positive Rep: " + positiveRep + " " + ChatColor.RED + "Negative Rep: " + Math.abs(negativeRep) + ChatColor.BLUE + " Total Rep: " + ChatColor.GRAY + (positiveRep + negativeRep));
 	}
 	
 	public static void repFooter(Player player) {

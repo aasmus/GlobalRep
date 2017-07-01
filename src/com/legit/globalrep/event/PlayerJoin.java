@@ -28,7 +28,6 @@ public class PlayerJoin implements Listener {
 	 */
 	@EventHandler(priority = EventPriority.NORMAL)
     public void onPlayerJoin(PlayerJoinEvent event) {
-		System.out.println("onPlayerJoin working :DDD");
     	Player p = event.getPlayer();
    		BukkitScheduler scheduler = getServer().getScheduler();
    		scheduler.runTaskLaterAsynchronously(plugin, new Runnable() {
