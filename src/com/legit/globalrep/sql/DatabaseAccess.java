@@ -56,20 +56,18 @@ public class DatabaseAccess {
 	 * 
 	 * @param name - name of the MySQL table to be created
 	 */
-	public synchronized void createTable(String name) {
+	public void createTable(String name) {
 		this.connection = dbConn.checkConnection(connection);
 		if(connection == null) {
 			return;
 		}
 		String query = "SELECT table_name FROM information_schema.tables WHERE table_schema = ? AND table_name = ?";
-		PreparedStatement ps = null;
-		ResultSet rs = null;
 		try {
-			ps = connection.prepareStatement(query);
+			PreparedStatement ps = connection.prepareStatement(query);
 			ps.setQueryTimeout(5);
 			ps.setString(1, DB_NAME);
 			ps.setString(2, name);
-			rs = ps.executeQuery();
+			ResultSet rs = ps.executeQuery();
 			if(!rs.next()){
 				if(name.equals("User")) {
 			    	query = "CREATE TABLE User "
@@ -98,15 +96,11 @@ public class DatabaseAccess {
 					Message.databaseError(e);
 				}
 			}
-		} catch (SQLException e) {
-			Message.genericErrorSystem(e);
-		}	
-		try {
 			ps.close();
 			rs.close();
 		} catch (SQLException e) {
 			Message.genericErrorSystem(e);
-		}
+		}	
 	}
 	
 	/**
@@ -115,19 +109,17 @@ public class DatabaseAccess {
 	 * @param name - username of player having username checked
 	 * @param uuid - UUID of player having username checked
 	 */
-	public synchronized void checkDatabase(String name, String uuid) {
+	public void checkDatabase(String name, String uuid) {
 		this.connection = dbConn.checkConnection(connection);
 		if(connection == null) {
 			return;
 		}
-		PreparedStatement ps = null;
-		ResultSet rs = null;
 		try {
 			String query = "SELECT username FROM User WHERE UUID = (?)";
-			ps = connection.prepareStatement(query);
+			PreparedStatement ps = connection.prepareStatement(query);
 			ps.setQueryTimeout(5);
 			ps.setString(1, uuid);
-			rs = ps.executeQuery();
+			ResultSet rs = ps.executeQuery();
 			if(!rs.next()) {
 				query = "INSERT INTO User (UUID, username) VALUES (?, ?)";
 				ps = connection.prepareStatement(query);
@@ -145,14 +137,10 @@ public class DatabaseAccess {
 					ps.executeUpdate();
 				}
 			}
-		} catch (SQLException e) {
-			Message.databaseError(e);
-		}
-		try {
 			ps.close();
 			rs.close();
 		} catch (SQLException e) {
-			Message.genericErrorSystem(e);
+			Message.databaseError(e);
 		}
 	}
 	
@@ -164,24 +152,22 @@ public class DatabaseAccess {
 	 * @param uuid - UUID of the player who's rep is being looked up
 	 * @param page - rep page # that command sender is currently on
 	 */
-	public synchronized void getRep(Player player, String username, UUID uuid, int page) {
+	public void getRep(Player player, String username, UUID uuid, int page) {
 		this.connection = dbConn.checkConnection(connection);
 		if(connection == null) {
 			return;
 		}
 		int userId = getUserId(uuid);
-		PreparedStatement ps = null;
-		ResultSet rs = null;
 		if (userId == 0) {
 			Message.noRep(player, username);
 			return;
 		} else {
 			String query = "SELECT r.date, r.repAmount, r.comment, u.username FROM Rep r JOIN  User u ON r.giverId = u.userId WHERE r.userId = (SELECT userId FROM User WHERE uuid = ?) ORDER BY repId DESC";
 			try {
-				ps = connection.prepareStatement(query);
+				PreparedStatement ps = connection.prepareStatement(query);
 				ps.setQueryTimeout(5);
 				ps.setString(1, uuid.toString());
-				rs = ps.executeQuery();
+				ResultSet rs = ps.executeQuery();
 				List<Rep> reps = Collections.synchronizedList(new ArrayList<Rep>());
 				int numRep = 0;
 				while (rs.next()) {
@@ -192,16 +178,12 @@ public class DatabaseAccess {
 				}
 				int totalPages = (numRep + 10 - 1) / 10;
 				RepCommand.displayRep(player, username, reps, page, totalPages);
+				ps.close();
+				rs.close();
 			} catch (Exception e) {
 				Message.databaseError(e);
 				Message.genericErrorPlayer(player);
 			}
-		}
-		try {
-			ps.close();
-			rs.close();
-		} catch (SQLException e) {
-			Message.genericErrorSystem(e);
 		}
 	}
 	
@@ -213,7 +195,7 @@ public class DatabaseAccess {
 	 * @param rep - amount of rep given
 	 * @param comment - comment given by the command sender to the rep reciever
 	 */
-	public synchronized void addRep(Player player, String username, int rep, String comment) {
+	public void addRep(Player player, String username, int rep, String comment) {
 		if (player.getName().equalsIgnoreCase(username)) {
 			Message.repSelf(player);
 			return;
@@ -234,9 +216,8 @@ public class DatabaseAccess {
 
 		String query = "INSERT INTO Rep (date, repAmount, giverId, comment, userId) VALUES "
 				+ "(?, ?, (SELECT userId FROM User WHERE uuid = (?)), ?, (SELECT userId FROM User WHERE uuid = (SELECT uuid FROM User WHERE username = ?)))";
-		PreparedStatement ps = null;
 		try {
-			ps = connection.prepareStatement(query);
+			PreparedStatement ps = connection.prepareStatement(query);
 			ps.setQueryTimeout(5);
 			ps.setString(1, date);
 			ps.setInt(2, rep);
@@ -252,17 +233,12 @@ public class DatabaseAccess {
 			} catch (NullPointerException e) {
 				// no handling necessary if player isn't online
 			}
+			ps.close();
 		} catch (SQLException e) {
 			Message.noPlayer(player);
 		} catch (NullPointerException e) {
 			Message.genericErrorSystem(e);
 		}
-		try {
-			ps.close();
-		} catch (SQLException e) {
-			Message.genericErrorSystem(e);
-		}
-		return;
 	}
 	
 	
@@ -271,26 +247,20 @@ public class DatabaseAccess {
 	 * 
 	 * @param repId - repId from the "Rep" table
 	 */
-	public synchronized boolean removeRep(int repId) {
+	public boolean removeRep(int repId) {
 		this.connection = dbConn.checkConnection(connection);
 		if(connection == null) {
 			return false;
 		}
 		String delete = "DELETE FROM Rep WHERE repId = ?";
-		PreparedStatement ps = null;
 		try {
-			ps = connection.prepareStatement(delete);
+			PreparedStatement ps = connection.prepareStatement(delete);
 			ps.setQueryTimeout(5);
 			ps.setInt(1, repId);
 			ps.executeUpdate();
-		} catch (SQLException e) {
-			Message.databaseError(e);
-			return false;
-		}
-		try {
 			ps.close();
 		} catch (SQLException e) {
-			Message.genericErrorSystem(e);
+			Message.databaseError(e);
 			return false;
 		}
 		return true;
@@ -302,32 +272,26 @@ public class DatabaseAccess {
 	 * @param uuid - UUID of player who is being checked for previous logins
 	 * @return - true = has logged in, false = hasn't logged in
 	 */
-	public synchronized boolean hasLoggedIn(UUID uuid) {
+	public boolean hasLoggedIn(UUID uuid) {
 		this.connection = dbConn.checkConnection(connection);
 		if(connection == null) {
 			return false;
 		}
 		String query = "SELECT userId FROM User WHERE UUID = (?)";
-		PreparedStatement ps = null;
-		ResultSet rs = null;
 		try {
-			ps = connection.prepareStatement(query);
+			PreparedStatement ps = connection.prepareStatement(query);
 			ps.setQueryTimeout(5);
 			ps.setString(1, uuid.toString());
-			rs = ps.executeQuery();
+			ResultSet rs = ps.executeQuery();
 			if (!rs.next()) {
 				ps.close();
 				rs.close();
 				return false;
 			}
-		} catch (Exception e) {
-			return false;
-		}
-		try {
 			ps.close();
 			rs.close();
-		} catch (SQLException e) {
-			Message.genericErrorSystem(e);
+		} catch (Exception e) {
+			return false;
 		}
 		return true;
 	}
@@ -338,29 +302,23 @@ public class DatabaseAccess {
 	 * @param uuid - UUID of the player who's userId is being looked up
 	 * @return - returns a userId or 0 if not found
 	 */
-	private synchronized int getUserId(UUID uuid) {
+	private int getUserId(UUID uuid) {
 		this.connection = dbConn.checkConnection(connection);
 		if(connection == null) {
 			return 0;
 		}
 		String query = "SELECT userId FROM Rep WHERE userId = (SELECT userId FROM User WHERE UUID = (?))";
-		PreparedStatement ps = null;
-		ResultSet rs = null;
 		int userId = 0;
 		try {
-			ps = connection.prepareStatement(query);
+			PreparedStatement ps = connection.prepareStatement(query);
 			ps.setQueryTimeout(5);
 			ps.setString(1, uuid.toString());
-			rs = ps.executeQuery();
+			ResultSet rs = ps.executeQuery();
 			rs.next();
 			userId = rs.getInt("userId");
-		} catch(Exception e) {
-		}
-		try {
 			ps.close();
 			rs.close();
-		} catch (SQLException e) {
-			Message.genericErrorSystem(e);
+		} catch(Exception e) {
 		}
 		return userId;
 	}
@@ -372,7 +330,7 @@ public class DatabaseAccess {
 	 * @param username - username of player who received the rep
 	 * @return - returns repId if exists or 0 if doesn't exist
 	 */
-	private synchronized int getRepIdbyUUID(UUID uuid, String username) {
+	private int getRepIdbyUUID(UUID uuid, String username) {
 		this.connection = dbConn.checkConnection(connection);
 		if(connection == null) {
 			return 0;
@@ -383,25 +341,19 @@ public class DatabaseAccess {
 				+ " AND userId = "
 				+ "(SELECT userId FROM User WHERE UUID = "
 				+ "(SELECT uuid FROM User WHERE username = ?))";
-		PreparedStatement ps = null;
-		ResultSet rs = null;
 		try {
-			ps = connection.prepareStatement(query);
+			PreparedStatement ps = connection.prepareStatement(query);
 			ps.setQueryTimeout(5);
 			ps.setString(1, uuid.toString());
 			ps.setString(2, username);
-			rs = ps.executeQuery();
+			ResultSet rs = ps.executeQuery();
 			if(rs.next()){
 				repId = rs.getInt("repId");
 			}
-		} catch (SQLException e) {
-			Message.databaseError(e);
-		}
-		try {
 			ps.close();
 			rs.close();
 		} catch (SQLException e) {
-			Message.genericErrorSystem(e);
+			Message.databaseError(e);
 		}
 		return repId;
 	}
@@ -414,27 +366,27 @@ public class DatabaseAccess {
 	 * @param giver - player who gave rep
 	 * @return - returns repId if exists or 0 if doesn't exist
 	 */
-	public synchronized int getrepIdByUsername(Player player, String reciever, String giver) {
+	public int getrepIdByUsername(Player player, String reciever, String giver) {
 		this.connection = dbConn.checkConnection(connection);
 		if(connection == null) {
 			return 0;
 		}
 		int repId = 0;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
 		String query = "SELECT repId FROM Rep WHERE giverId = "
 				+ "(SELECT userId FROM User WHERE UUID = "
 				+ "(SELECT uuid FROM User WHERE username = ?)) AND userId = "
 				+ "(SELECT userId FROM User WHERE UUID = (SELECT uuid FROM User WHERE username = ?))";
 		try {
-			ps = connection.prepareStatement(query);
+			PreparedStatement ps = connection.prepareStatement(query);
 			ps.setQueryTimeout(5);
 			ps.setString(1, giver);
 			ps.setString(2, reciever);
-			rs = ps.executeQuery();
+			ResultSet rs = ps.executeQuery();
 			if(rs.next()) {
 				repId = rs.getInt("repId");
 			}
+			ps.close();
+			rs.close();
 		} catch (SQLException e) {
 			Message.noRecord(player);
 		}
