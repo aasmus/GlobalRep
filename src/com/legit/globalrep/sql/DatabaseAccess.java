@@ -56,7 +56,7 @@ public class DatabaseAccess {
 	 * 
 	 * @param name - name of the MySQL table to be created
 	 */
-	public void createTable(String name) {
+	public synchronized void createTable(String name) {
 		this.connection = dbConn.checkConnection(connection);
 		if(connection == null) {
 			return;
@@ -164,7 +164,7 @@ public class DatabaseAccess {
 	 * @param uuid - UUID of the player who's rep is being looked up
 	 * @param page - rep page # that command sender is currently on
 	 */
-	public void getRep(Player player, String username, UUID uuid, int page) {
+	public synchronized void getRep(Player player, String username, UUID uuid, int page) {
 		this.connection = dbConn.checkConnection(connection);
 		if(connection == null) {
 			return;
@@ -213,7 +213,7 @@ public class DatabaseAccess {
 	 * @param rep - amount of rep given
 	 * @param comment - comment given by the command sender to the rep reciever
 	 */
-	public void addRep(Player player, String username, int rep, String comment) {
+	public synchronized void addRep(Player player, String username, int rep, String comment) {
 		if (player.getName().equalsIgnoreCase(username)) {
 			Message.repSelf(player);
 			return;
@@ -271,7 +271,7 @@ public class DatabaseAccess {
 	 * 
 	 * @param repId - repId from the "Rep" table
 	 */
-	public boolean removeRep(int repId) {
+	public synchronized boolean removeRep(int repId) {
 		this.connection = dbConn.checkConnection(connection);
 		if(connection == null) {
 			return false;
@@ -302,7 +302,7 @@ public class DatabaseAccess {
 	 * @param uuid - UUID of player who is being checked for previous logins
 	 * @return - true = has logged in, false = hasn't logged in
 	 */
-	public boolean hasLoggedIn(UUID uuid) {
+	public synchronized boolean hasLoggedIn(UUID uuid) {
 		this.connection = dbConn.checkConnection(connection);
 		if(connection == null) {
 			return false;
@@ -338,7 +338,7 @@ public class DatabaseAccess {
 	 * @param uuid - UUID of the player who's userId is being looked up
 	 * @return - returns a userId or 0 if not found
 	 */
-	private int getUserId(UUID uuid) {
+	private synchronized int getUserId(UUID uuid) {
 		this.connection = dbConn.checkConnection(connection);
 		if(connection == null) {
 			return 0;
@@ -372,7 +372,7 @@ public class DatabaseAccess {
 	 * @param username - username of player who received the rep
 	 * @return - returns repId if exists or 0 if doesn't exist
 	 */
-	private int getRepIdbyUUID(UUID uuid, String username) {
+	private synchronized int getRepIdbyUUID(UUID uuid, String username) {
 		this.connection = dbConn.checkConnection(connection);
 		if(connection == null) {
 			return 0;
@@ -414,7 +414,7 @@ public class DatabaseAccess {
 	 * @param giver - player who gave rep
 	 * @return - returns repId if exists or 0 if doesn't exist
 	 */
-	public int getrepIdByUsername(Player player, String reciever, String giver) {
+	public synchronized int getrepIdByUsername(Player player, String reciever, String giver) {
 		this.connection = dbConn.checkConnection(connection);
 		if(connection == null) {
 			return 0;

@@ -34,15 +34,15 @@ public class DatabaseConnection {
 	private final String DB_IP;
 	private final int DB_PORT;
 	private final String DB_NAME;
-	private final String user;
-	private final String pass;
+	private final String USERNAME;
+	private final String PASSWORD;
 
 	public DatabaseConnection(String databaseIp, int databasePort, String databaseName, String username, String password) {
 		DB_IP = databaseIp;
 		DB_PORT = databasePort;
 		DB_NAME = databaseName;
-		user = username;
-		pass = password;
+		USERNAME = username;
+		PASSWORD = password;
 	}
 
 	/**
@@ -67,7 +67,16 @@ public class DatabaseConnection {
 		Connection conn = null;
 
 		try {
-			conn = DriverManager.getConnection("jdbc:mysql://" + DB_IP + ":" + DB_PORT + "/" + DB_NAME, user, pass);
+			conn = DriverManager.getConnection("jdbc:mysql://" + DB_IP + ":" + DB_PORT + "/" + DB_NAME, USERNAME, PASSWORD);
+		} catch (SQLException e) {
+			Message.databaseError(e);
+		}
+		return conn;
+	}
+	
+	private Connection renewConnection(Connection conn) {
+		try {
+			conn = DriverManager.getConnection("jdbc:mysql://" + DB_IP + ":" + DB_PORT + "/" + DB_NAME, USERNAME, PASSWORD);
 		} catch (SQLException e) {
 			Message.databaseError(e);
 		}
@@ -83,7 +92,7 @@ public class DatabaseConnection {
 	public Connection checkConnection(Connection connection) {
 		try {
 			if(connection == null || connection.isClosed()) {
-				 connection = getConnection();
+				 connection = renewConnection(connection);
 			}
 		} catch (SQLException e) {
 			Message.databaseError(e);
