@@ -41,11 +41,11 @@ public class RepDriver extends JavaPlugin implements Listener {
         getServer().getPluginManager().registerEvents(this, this);
     	
     	if(config.contains("MYSQL.Host") && config.contains("MYSQL.Port") && config.contains("MYSQL.Database") && config.contains("MYSQL.Username") && config.contains("MYSQL.Password")){
-    		this.dbAccess = new DatabaseAccess(config.getString("MYSQL.Host"), config.getInt("MYSQL.Port"), config.getString("MYSQL.Database"), config.getString("MYSQL.Username"), config.getString("MYSQL.Password"));
+    		this.dbAccess = new DatabaseAccess(config.getString("MYSQL.Host"), config.getInt("MYSQL.Port"), config.getString("MYSQL.Database"), config.getString("MYSQL.Username"), config.getString("MYSQL.Password"), this);
         	dbAccess.createTable("User");
         	dbAccess.createTable("Rep");
         	Bukkit.getPluginManager().registerEvents(new PlayerJoin(this, dbAccess), this);
-        	this.getCommand("rep").setExecutor(new RepCommand(dbAccess, this));
+        	this.getCommand("rep").setExecutor(new RepCommand(dbAccess));
     	} else {
         	if(!config.contains("MYSQL.Host")) {
         		config.addDefault("MYSQL.Host", "127.0.0.1");

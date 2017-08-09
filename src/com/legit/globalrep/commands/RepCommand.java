@@ -23,16 +23,13 @@
  */
 package com.legit.globalrep.commands;
 
-import static org.bukkit.Bukkit.getServer;
-
+import java.util.List;
 import java.util.UUID;
 
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
-import org.bukkit.scheduler.BukkitScheduler;
 
 import com.legit.globalrep.chat.Message;
 import com.legit.globalrep.object.Rep;
@@ -41,11 +38,9 @@ import com.legit.globalrep.util.UUIDFetcher;
 
 public class RepCommand implements CommandExecutor {
 	private DatabaseAccess dbAccess;
-	private Plugin instance;
 	
-	public RepCommand(DatabaseAccess dbAccess, Plugin instance) {
+	public RepCommand(DatabaseAccess dbAccess) {
 		this.dbAccess = dbAccess;
-		this.instance = instance;
 	}
 
 	@Override
@@ -59,59 +54,103 @@ public class RepCommand implements CommandExecutor {
 			if (args.length == 0) {
 				Message.help(player);
 			} else {
-				BukkitScheduler scheduler = getServer().getScheduler();
-				scheduler.runTaskLaterAsynchronously(instance, new Runnable() {
-					public void run() {
-						if (args.length == 1) {
-							UUID uuid = UUIDFetcher.findUUID(args[0]);
-							boolean exists = dbAccess.hasLoggedIn(uuid);
-							if (exists)
-								dbAccess.getRep(player, args[0], uuid, 1);
-							else if (!exists || uuid == null)
+				if (args.length == 1) {
+					UUID uuid = UUIDFetcher.findUUID(args[0]);
+					if(uuid == null) {
+						Message.noPlayer(player);
+						return true;
+					}
+					dbAccess.hasLoggedIn(uuid, new CallbackBoolean() {
+
+						@Override
+						public void onQueryDone(Boolean bool) {
+							if (bool) {
+								dbAccess.getRep(player, args[0], uuid, 1, new CallbackRep() {
+									@Override
+									public void onQueryDone(List<Rep> reps, int totalPages) {
+										RepCommand.displayRep(player, args[0], reps, 1, totalPages);
+									}
+								});
+							} else if (!bool) {
 								Message.noPlayer(player);
-						} else if (args.length >= 2) {
-							if (args[1].equalsIgnoreCase("positive") || args[1].equalsIgnoreCase("pos")
-									|| args[1].equalsIgnoreCase("+")) {
-								for (int i = 10; i > 0; i--) {
-									if (player.hasPermission("rep.amount." + i)) {
-										String comment = getComment(args);
-										dbAccess.addRep(player, args[0], i, comment);
-										break;
+							}
+						}
+					});
+				} else if (args.length >= 2) {
+					if (args[1].equalsIgnoreCase("positive") || args[1].equalsIgnoreCase("pos")
+							|| args[1].equalsIgnoreCase("+")) {
+						UUID uuid = UUIDFetcher.findUUID(args[0]);
+						if(uuid == null) {
+							Message.noPlayer(player);
+							return true;
+						}
+						dbAccess.hasLoggedIn(uuid, new CallbackBoolean() {
+							@Override
+							public void onQueryDone(Boolean bool) {
+								if(bool) {
+									for (int i = 10; i > 0; i--) {
+										if (player.hasPermission("rep.amount." + i)) {
+											String comment = getComment(args);
+											dbAccess.addRep(player, args[0], i, comment);
+											break;
+										}
 									}
 								}
-							} else if (args[1].equalsIgnoreCase("negative") || args[1].equalsIgnoreCase("neg")
-									|| args[1].equalsIgnoreCase("-")) {
-								for (int i = 10; i > 0; i--) {
-									if (player.hasPermission("rep.amount." + i)) {
-										String comment = getComment(args);
-										dbAccess.addRep(player, args[0], -i, comment);
-										break;
+							}
+						});
+					} else if (args[1].equalsIgnoreCase("negative") || args[1].equalsIgnoreCase("neg")
+							|| args[1].equalsIgnoreCase("-")) {
+						UUID uuid = UUIDFetcher.findUUID(args[0]);
+						if(uuid == null) {
+							Message.noPlayer(player);
+							return true;
+						}
+						dbAccess.hasLoggedIn(uuid, new CallbackBoolean() {
+							@Override
+							public void onQueryDone(Boolean bool) {
+								if(bool) {
+									for (int i = 10; i > 0; i--) {
+										if (player.hasPermission("rep.amount." + i)) {
+											String comment = getComment(args);
+											dbAccess.addRep(player, args[0], -i, comment);
+											break;
+										}
 									}
 								}
-							} else if (args[0].equalsIgnoreCase("delete")) {
-								if (player.hasPermission("rep.delete")) {
-									deleteRecord(player, args[1], args[2]);
-								} else {
-									Message.noRepSelf(player);
-								}
-							} else if (args[1].equalsIgnoreCase("page")) {
-								UUID uuid = UUIDFetcher.findUUID(args[0]);
-								boolean exists = dbAccess.hasLoggedIn(uuid);
-								if (exists) {
+							}
+						});
+					} else if (args[0].equalsIgnoreCase("delete")) {
+						if (player.hasPermission("rep.delete")) {
+							deleteRecord(player, args[1], args[2]);
+						} else {
+							Message.noRepSelf(player);
+						}
+					} else if (args[1].equalsIgnoreCase("page")) {
+						UUID uuid = UUIDFetcher.findUUID(args[0]);
+						dbAccess.hasLoggedIn(uuid, new CallbackBoolean() {
+
+							@Override
+							public void onQueryDone(Boolean bool) {
+								if (bool) {
 									try {
-										dbAccess.getRep(player, args[0], uuid, Integer.parseInt(args[2]));
+										dbAccess.getRep(player, args[0], uuid, Integer.parseInt(args[2]), new CallbackRep() {
+													@Override
+													public void onQueryDone(List<Rep> reps, int totalPages) {
+															RepCommand.displayRep(player, args[0], reps, Integer.parseInt(args[2]), totalPages);
+													}
+												});
 									} catch (Exception e) {
 										Message.noInt(player);
 									}
-								} else {
+								} else
 									Message.noPlayer(player);
-								}
-							} else {
-								Message.invalidFormat(player, args[1]);
 							}
-						}
+
+						});
+					} else {
+						Message.invalidFormat(player, args[1]);
 					}
-				}, 1L);
+				}
 			}
 			return true;
 		}
@@ -145,16 +184,29 @@ public class RepCommand implements CommandExecutor {
 	 * @param giver - player who gave the rep that is being deleted
 	 */
 	private void deleteRecord(Player player, String reciever, String giver) {
-		int repId = dbAccess.getrepIdByUsername(player, reciever, giver);
-		if (repId != 0) {
-			boolean deleted = dbAccess.removeRep(repId);
-			if(deleted)
-				Message.repRemoved(player);
-			else
-				Message.genericErrorPlayer(player);
-		} else {
-			Message.noRecord(player);
-		}
+		dbAccess.getrepIdByUsername(player, reciever, giver, new CallbackInt() {
+
+			@Override
+			public void onQueryDone(int repId) {
+				if (repId != 0) {
+					dbAccess.checkRepId(repId, new CallbackBoolean() {
+
+						@Override
+						public void onQueryDone(Boolean bool) {
+							if (bool) {
+								dbAccess.removeRep(repId);
+								Message.repRemoved(player);
+							} else {
+								Message.genericErrorPlayer(player);
+							}
+						}
+
+					});
+				} else {
+					Message.noRecord(player);
+				}
+			}
+		});
 	}
 	
 	/**
@@ -231,5 +283,16 @@ public class RepCommand implements CommandExecutor {
 			Message.repNegative(player, rep.getAmount(), rep.getDate(), rep.getUsername(), rep.getComment());
 		}
 	}
-
+	
+	public interface CallbackBoolean {
+		public void onQueryDone(Boolean bool);
+	}
+	
+	public interface CallbackInt {
+		public void onQueryDone(int num);
+	}
+	
+	public interface CallbackRep {
+		public void onQueryDone(List<Rep> reps, int totalPages);
+	}
 }
