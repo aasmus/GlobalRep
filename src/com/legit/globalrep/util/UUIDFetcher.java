@@ -22,9 +22,12 @@
 package com.legit.globalrep.util;
 
 import com.google.common.collect.ImmutableList;
+import com.legit.globalrep.commands.RepCommand.CallbackUUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.scheduler.BukkitScheduler;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -119,22 +122,37 @@ public class UUIDFetcher implements Callable<Map<String, UUID>> {
     }
     
 	@SuppressWarnings("deprecation")
-    public static UUID findUUID(String username) {
-    	UUID uuid = null;
-		if(Bukkit.getServer().getPlayer(username) != null) {
-			uuid = Bukkit.getServer().getPlayer(username).getUniqueId();
-		} else {
-			OfflinePlayer op = Bukkit.getOfflinePlayer(username);
-			if (op.hasPlayedBefore()) {
-			    uuid = op.getUniqueId();
-			} else {
-				try {
-					uuid = getUUIDOf(username);
-				} catch (Exception e) {
-					
-				}
+    public static void findUUID(String username,Plugin plugin, CallbackUUID cu) {
+		final BukkitScheduler scheduler = Bukkit.getServer().getScheduler();
+		Bukkit.getScheduler().runTaskAsynchronously(plugin, new Runnable() {
+			@Override
+			public void run() {
+				UUID id = null;
+		    	if(username.matches("[a-zA-Z0-9_]{2,16}")) {
+		    		if(Bukkit.getServer().getPlayer(username) != null) {
+		    			id = Bukkit.getServer().getPlayer(username).getUniqueId();
+		    		} else {
+		    			OfflinePlayer op = Bukkit.getOfflinePlayer(username);
+		    			if (op.hasPlayedBefore()) {
+		    			  id = op.getUniqueId();
+		    			} else {
+		    				try {
+		    					id = getUUIDOf(username);
+		    				} catch (Exception e) {
+		    				}
+		    			}
+		    		}
+		    	}
+		    	UUID uuid = id;
+        		scheduler.runTask(plugin, new Runnable() {
+                    @Override
+                    public void run() {
+                        cu.onQueryDone(uuid);
+                    }
+                });
 			}
-		}
-		return uuid;
+			
+		});
     }
+	
 }

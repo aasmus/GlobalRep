@@ -30,6 +30,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
 
 import com.legit.globalrep.chat.Message;
 import com.legit.globalrep.object.Rep;
@@ -38,9 +39,11 @@ import com.legit.globalrep.util.UUIDFetcher;
 
 public class RepCommand implements CommandExecutor {
 	private DatabaseAccess dbAccess;
+	private Plugin plugin;
 	
-	public RepCommand(DatabaseAccess dbAccess) {
+	public RepCommand(DatabaseAccess dbAccess, Plugin plugin) {
 		this.dbAccess = dbAccess;
+		this.plugin = plugin;
 	}
 
 	@Override
@@ -55,69 +58,87 @@ public class RepCommand implements CommandExecutor {
 				Message.help(player);
 			} else {
 				if (args.length == 1) {
-					UUID uuid = UUIDFetcher.findUUID(args[0]);
-					if(uuid == null) {
-						Message.noPlayer(player);
-						return true;
-					}
-					dbAccess.hasLoggedIn(uuid, new CallbackBoolean() {
+					UUIDFetcher.findUUID(args[0], plugin, new CallbackUUID() {
 
 						@Override
-						public void onQueryDone(Boolean bool) {
-							if (bool) {
-								dbAccess.getRep(player, args[0], uuid, 1, new CallbackRep() {
-									@Override
-									public void onQueryDone(List<Rep> reps, int totalPages) {
-										RepCommand.displayRep(player, args[0], reps, 1, totalPages);
-									}
-								});
-							} else if (!bool) {
+						public void onQueryDone(UUID uuid) {
+							if(uuid == null) {
 								Message.noPlayer(player);
+								return;
 							}
+							dbAccess.hasLoggedIn(uuid, new CallbackBoolean() {
+
+								@Override
+								public void onQueryDone(Boolean bool) {
+									if (bool) {
+										dbAccess.getRep(player, args[0], uuid, 1, new CallbackRep() {
+											@Override
+											public void onQueryDone(List<Rep> reps, int totalPages) {
+												RepCommand.displayRep(player, args[0], reps, 1, totalPages);
+											}
+										});
+									} else if (!bool) {
+										Message.noPlayer(player);
+									}
+								}
+							});
 						}
+						
 					});
 				} else if (args.length >= 2) {
 					if (args[1].equalsIgnoreCase("positive") || args[1].equalsIgnoreCase("pos")
 							|| args[1].equalsIgnoreCase("+")) {
-						UUID uuid = UUIDFetcher.findUUID(args[0]);
-						if(uuid == null) {
-							Message.noPlayer(player);
-							return true;
-						}
-						dbAccess.hasLoggedIn(uuid, new CallbackBoolean() {
+						UUIDFetcher.findUUID(args[0], plugin, new CallbackUUID() {
+
 							@Override
-							public void onQueryDone(Boolean bool) {
-								if(bool) {
-									for (int i = 10; i > 0; i--) {
-										if (player.hasPermission("rep.amount." + i)) {
-											String comment = getComment(args);
-											dbAccess.addRep(player, args[0], i, comment);
-											break;
+							public void onQueryDone(UUID uuid) {
+								if(uuid == null) {
+									Message.noPlayer(player);
+									return;
+								}
+								dbAccess.hasLoggedIn(uuid, new CallbackBoolean() {
+									@Override
+									public void onQueryDone(Boolean bool) {
+										if(bool) {
+											for (int i = 10; i > 0; i--) {
+												if (player.hasPermission("rep.amount." + i)) {
+													String comment = getComment(args);
+													dbAccess.addRep(player, args[0], i, comment);
+													break;
+												}
+											}
 										}
 									}
-								}
+								});
 							}
+							
 						});
 					} else if (args[1].equalsIgnoreCase("negative") || args[1].equalsIgnoreCase("neg")
 							|| args[1].equalsIgnoreCase("-")) {
-						UUID uuid = UUIDFetcher.findUUID(args[0]);
-						if(uuid == null) {
-							Message.noPlayer(player);
-							return true;
-						}
-						dbAccess.hasLoggedIn(uuid, new CallbackBoolean() {
+						UUIDFetcher.findUUID(args[0], plugin, new CallbackUUID() {
+
 							@Override
-							public void onQueryDone(Boolean bool) {
-								if(bool) {
-									for (int i = 10; i > 0; i--) {
-										if (player.hasPermission("rep.amount." + i)) {
-											String comment = getComment(args);
-											dbAccess.addRep(player, args[0], -i, comment);
-											break;
+							public void onQueryDone(UUID uuid) {
+								if(uuid == null) {
+									Message.noPlayer(player);
+									return;
+								}
+								dbAccess.hasLoggedIn(uuid, new CallbackBoolean() {
+									@Override
+									public void onQueryDone(Boolean bool) {
+										if(bool) {
+											for (int i = 10; i > 0; i--) {
+												if (player.hasPermission("rep.amount." + i)) {
+													String comment = getComment(args);
+													dbAccess.addRep(player, args[0], -i, comment);
+													break;
+												}
+											}
 										}
 									}
-								}
+								});
 							}
+							
 						});
 					} else if (args[0].equalsIgnoreCase("delete")) {
 						if (player.hasPermission("rep.delete")) {
@@ -126,26 +147,36 @@ public class RepCommand implements CommandExecutor {
 							Message.noRepSelf(player);
 						}
 					} else if (args[1].equalsIgnoreCase("page")) {
-						UUID uuid = UUIDFetcher.findUUID(args[0]);
-						dbAccess.hasLoggedIn(uuid, new CallbackBoolean() {
+						UUIDFetcher.findUUID(args[0], plugin, new CallbackUUID() {
 
 							@Override
-							public void onQueryDone(Boolean bool) {
-								if (bool) {
-									try {
-										dbAccess.getRep(player, args[0], uuid, Integer.parseInt(args[2]), new CallbackRep() {
-													@Override
-													public void onQueryDone(List<Rep> reps, int totalPages) {
-															RepCommand.displayRep(player, args[0], reps, Integer.parseInt(args[2]), totalPages);
-													}
-												});
-									} catch (Exception e) {
-										Message.noInt(player);
-									}
-								} else
+							public void onQueryDone(UUID uuid) {
+								if(uuid == null) {
 									Message.noPlayer(player);
-							}
+									return;
+								}
+								dbAccess.hasLoggedIn(uuid, new CallbackBoolean() {
 
+									@Override
+									public void onQueryDone(Boolean bool) {
+										if (bool) {
+											try {
+												dbAccess.getRep(player, args[0], uuid, Integer.parseInt(args[2]), new CallbackRep() {
+															@Override
+															public void onQueryDone(List<Rep> reps, int totalPages) {
+																	RepCommand.displayRep(player, args[0], reps, Integer.parseInt(args[2]), totalPages);
+															}
+														});
+											} catch (Exception e) {
+												Message.noInt(player);
+											}
+										} else
+											Message.noPlayer(player);
+									}
+
+								});
+							}
+							
 						});
 					} else {
 						Message.invalidFormat(player, args[1]);
@@ -295,4 +326,9 @@ public class RepCommand implements CommandExecutor {
 	public interface CallbackRep {
 		public void onQueryDone(List<Rep> reps, int totalPages);
 	}
+	
+	public interface CallbackUUID {
+		public void onQueryDone(UUID uuid);
+	}
+	
 }

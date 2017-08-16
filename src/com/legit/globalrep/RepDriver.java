@@ -45,7 +45,7 @@ public class RepDriver extends JavaPlugin implements Listener {
         	dbAccess.createTable("User");
         	dbAccess.createTable("Rep");
         	Bukkit.getPluginManager().registerEvents(new PlayerJoin(this, dbAccess), this);
-        	this.getCommand("rep").setExecutor(new RepCommand(dbAccess));
+        	this.getCommand("rep").setExecutor(new RepCommand(dbAccess, this));
     	} else {
         	if(!config.contains("MYSQL.Host")) {
         		config.addDefault("MYSQL.Host", "127.0.0.1");
