@@ -59,9 +59,10 @@ public class Message {
 			player.sendMessage(ChatColor.GREEN + "Use /rep <name> to see a player's rep!");
 			player.sendMessage(ChatColor.GREEN + "Use /rep <name> positive <comment> to give positive rep!");
 			player.sendMessage(ChatColor.GREEN + "Use /rep <name> negative <comment> to give negative rep!");
-			if(player.hasPermission("rep.delete")) {
+			if(player.hasPermission("re.delete.self"))
+				player.sendMessage(ChatColor.GREEN + "Use /rep delete <name> to delete a rep you gave someone!");
+			if(player.hasPermission("rep.delete") || player.hasPermission("rep.delete.others"))
 				player.sendMessage(ChatColor.GREEN + "Use /rep delete <reciever> <giver> to remove rep!");
-			}
 			printLine(player);
 		}
 	}

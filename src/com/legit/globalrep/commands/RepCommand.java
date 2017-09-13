@@ -141,10 +141,18 @@ public class RepCommand implements CommandExecutor {
 							
 						});
 					} else if (args[0].equalsIgnoreCase("delete")) {
-						if (player.hasPermission("rep.delete")) {
-							deleteRecord(player, args[1], args[2]);
+						if(args.length == 2) {
+							if (player.hasPermission("rep.delete.self")) {
+								deleteRecord(player, args[1], sender.getName());
+							} else {
+								Message.noRepSelf(player);
+							}
 						} else {
-							Message.noRepSelf(player);
+							if (player.hasPermission("rep.delete") || player.hasPermission("rep.delete.others")) {
+								deleteRecord(player, args[1], args[2]);
+							} else {
+								Message.noRepSelf(player);
+							}
 						}
 					} else if (args[1].equalsIgnoreCase("page")) {
 						UUIDFetcher.findUUID(args[0], plugin, new CallbackUUID() {

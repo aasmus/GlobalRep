@@ -1,6 +1,6 @@
 main: com.legit.globalrep.RepDriver
 name: GlobalRep
-version: 1.7.5
+version: 1.7.6
 author: legit_craft
 description: Cross Server Reputation Plugin
 commands:
@@ -13,9 +13,15 @@ permissions:
   rep.allow:
     description: grants access to /rep commands
     default: true
-  rep.delete:
-    description: allows user to delete reputation records
+  rep.delete.self:
+    description: allows you to delete reputation records that you have made
+    default: false
+  rep.delete.others:
+    description: allows user to delete others reputation records
     default: op
+  rep.delete:
+    description: allows user to delete others reputation records
+    default: false
   rep.amount.1:
     description: gives the player a rep power of 1
     default: true

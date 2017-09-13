@@ -46,26 +46,25 @@ public class RepDriver extends JavaPlugin implements Listener {
         	dbAccess.createTable("Rep");
         	Bukkit.getPluginManager().registerEvents(new PlayerJoin(this, dbAccess), this);
         	this.getCommand("rep").setExecutor(new RepCommand(dbAccess, this));
-    	} else {
-        	if(!config.contains("MYSQL.Host")) {
-        		config.addDefault("MYSQL.Host", "127.0.0.1");
-        	}
-        	if(!config.contains("MYSQL.Port")) {
-        		config.addDefault("MYSQL.Port", 3306);
-        	}
-        	if(!config.contains("MYSQL.Database")) {
-        		config.addDefault("MYSQL.Database", "database name");
-        	}
-        	if(!config.contains("MYSQL.Username")) {
-        		config.addDefault("MYSQL.Username", "root");
-        	}
-        	if(!config.contains("MYSQL.Password")) {
-        		config.addDefault("MYSQL.Password", "password");
-        	}
-            config.options().copyDefaults(true);
-            saveConfig();	
+    	}else {
+    		if(!config.contains("MYSQL.Host")) {
+    			config.addDefault("MYSQL.Host", "127.0.0.1");
+    		}
+    		if(!config.contains("MYSQL.Port")) {
+    			config.addDefault("MYSQL.Port", 3306);
+    		}
+    		if(!config.contains("MYSQL.Database")) {
+    			config.addDefault("MYSQL.Database", "database name");
+    		}
+    		if(!config.contains("MYSQL.Username")) {
+    			config.addDefault("MYSQL.Username", "root");
+    		}
+    		if(!config.contains("MYSQL.Password")) {
+    			config.addDefault("MYSQL.Password", "password");
+    		}
+    	    config.options().copyDefaults(true);
+    	    saveConfig();	
     	}
-        
     }
    
     @Override
