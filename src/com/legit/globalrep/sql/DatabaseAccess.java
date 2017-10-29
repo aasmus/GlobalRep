@@ -130,11 +130,30 @@ public class DatabaseAccess {
 		    @Override
 		    public void run() {
 				try {
-					String query = "SELECT username FROM User WHERE UUID = (?)";
+					String query = "SELECT userId, UUID FROM User where username = (?)";
 					PreparedStatement ps = connection.prepareStatement(query);
+					ps.setString(1, name);
+					ps.setQueryTimeout(5);
+					ResultSet rs = ps.executeQuery();
+					while(rs.next()) {
+						if(!rs.getString("UUID").equals(uuid)) {
+							query = "DELETE FROM Rep WHERE userId = ?";
+							ps = connection.prepareStatement(query);
+						    ps.setQueryTimeout(5);
+							ps.setInt(1, rs.getInt("userId"));
+							ps.executeUpdate();
+							query = "DELETE FROM User WHERE UUID = ?";
+							ps = connection.prepareStatement(query);
+						    ps.setQueryTimeout(5);
+							ps.setString(1, rs.getString("UUID"));
+							ps.executeUpdate();
+						}
+					}
+					query = "SELECT username FROM User WHERE UUID = (?)";
+					ps = connection.prepareStatement(query);
 					ps.setQueryTimeout(5);
 					ps.setString(1, uuid);
-					ResultSet rs = ps.executeQuery();
+					rs = ps.executeQuery();
 					if(!rs.next()) {
 						query = "INSERT INTO User (UUID, username) VALUES (?, ?)";
 						ps = connection.prepareStatement(query);
