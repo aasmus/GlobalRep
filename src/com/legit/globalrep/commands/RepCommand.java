@@ -23,9 +23,9 @@
  */
 package com.legit.globalrep.commands;
 
-import java.util.List;
 import java.util.UUID;
 
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -33,17 +33,18 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
 import com.legit.globalrep.chat.Message;
-import com.legit.globalrep.object.Rep;
 import com.legit.globalrep.sql.DatabaseAccess;
 import com.legit.globalrep.util.UUIDFetcher;
 
 public class RepCommand implements CommandExecutor {
 	private DatabaseAccess dbAccess;
 	private Plugin plugin;
+	private Message msg;
 	
-	public RepCommand(DatabaseAccess dbAccess, Plugin plugin) {
+	public RepCommand(DatabaseAccess dbAccess, Plugin plugin, Message msg) {
 		this.dbAccess = dbAccess;
 		this.plugin = plugin;
+		this.msg = msg;
 	}
 
 	@Override
@@ -52,291 +53,69 @@ public class RepCommand implements CommandExecutor {
 			return false;
 		}
 		Player player = (Player) sender;
-
 		if (cmd.getName().equalsIgnoreCase("rep")) {
-			if (args.length == 0) {
-				Message.help(player);
-			} else {
-				if (args.length == 1) {
-					UUIDFetcher.findUUID(args[0], plugin, new CallbackUUID() {
-
-						@Override
-						public void onQueryDone(UUID uuid) {
-							if(uuid == null) {
-								Message.noPlayer(player);
-								return;
-							}
-							dbAccess.hasLoggedIn(uuid, new CallbackBoolean() {
-
-								@Override
-								public void onQueryDone(Boolean bool) {
-									if (bool) {
-										dbAccess.getRep(player, args[0], uuid, 1, new CallbackRep() {
-											@Override
-											public void onQueryDone(List<Rep> reps, int totalPages) {
-												RepCommand.displayRep(player, args[0], reps, 1, totalPages);
-											}
-										});
-									} else if (!bool) {
-										Message.noPlayer(player);
-									}
-								}
-							});
-						}
-						
-					});
-				} else if (args.length >= 2) {
-					if (args[1].equalsIgnoreCase("positive") || args[1].equalsIgnoreCase("pos")
-							|| args[1].equalsIgnoreCase("+")) {
-						UUIDFetcher.findUUID(args[0], plugin, new CallbackUUID() {
-
-							@Override
-							public void onQueryDone(UUID uuid) {
-								if(uuid == null) {
-									Message.noPlayer(player);
-									return;
-								}
-								dbAccess.hasLoggedIn(uuid, new CallbackBoolean() {
-									@Override
-									public void onQueryDone(Boolean bool) {
-										if(bool) {
-											for (int i = 10; i > 0; i--) {
-												if (player.hasPermission("rep.amount." + i)) {
-													String comment = getComment(args);
-													dbAccess.addRep(player, args[0], i, comment);
-													break;
-												}
-											}
-										}
-									}
-								});
-							}
-							
-						});
-					} else if (args[1].equalsIgnoreCase("negative") || args[1].equalsIgnoreCase("neg")
-							|| args[1].equalsIgnoreCase("-")) {
-						UUIDFetcher.findUUID(args[0], plugin, new CallbackUUID() {
-
-							@Override
-							public void onQueryDone(UUID uuid) {
-								if(uuid == null) {
-									Message.noPlayer(player);
-									return;
-								}
-								dbAccess.hasLoggedIn(uuid, new CallbackBoolean() {
-									@Override
-									public void onQueryDone(Boolean bool) {
-										if(bool) {
-											for (int i = 10; i > 0; i--) {
-												if (player.hasPermission("rep.amount." + i)) {
-													String comment = getComment(args);
-													dbAccess.addRep(player, args[0], -i, comment);
-													break;
-												}
-											}
-										}
-									}
-								});
-							}
-							
-						});
+			Bukkit.getScheduler().runTaskAsynchronously(plugin, new Runnable() {
+				@Override
+				public void run() {
+					if (args.length == 0) {
+						msg.sendHelp(player);
+					} else if(args[0].equalsIgnoreCase("help")) {
+						msg.sendHelp(player);
 					} else if (args[0].equalsIgnoreCase("delete")) {
-						if(args.length == 2) {
+						if (args.length == 2) {
 							if (player.hasPermission("rep.delete.self")) {
-								deleteRecord(player, args[1], sender.getName());
-							} else {
-								Message.noRepSelf(player);
+								dbAccess.removeRep(player, args[1], player.getName());
+							}
+							else {
+								msg.send(player, "SELF_REP");
 							}
 						} else {
 							if (player.hasPermission("rep.delete") || player.hasPermission("rep.delete.others")) {
-								deleteRecord(player, args[1], args[2]);
+								dbAccess.removeRep(player, args[1], args[2]);
 							} else {
-								Message.noRepSelf(player);
+								msg.send(player, "SELF_REP");
 							}
 						}
-					} else if (args[1].equalsIgnoreCase("page")) {
-						UUIDFetcher.findUUID(args[0], plugin, new CallbackUUID() {
-
-							@Override
-							public void onQueryDone(UUID uuid) {
-								if(uuid == null) {
-									Message.noPlayer(player);
-									return;
-								}
-								dbAccess.hasLoggedIn(uuid, new CallbackBoolean() {
-
-									@Override
-									public void onQueryDone(Boolean bool) {
-										if (bool) {
-											try {
-												dbAccess.getRep(player, args[0], uuid, Integer.parseInt(args[2]), new CallbackRep() {
-															@Override
-															public void onQueryDone(List<Rep> reps, int totalPages) {
-																	RepCommand.displayRep(player, args[0], reps, Integer.parseInt(args[2]), totalPages);
-															}
-														});
-											} catch (Exception e) {
-												Message.noInt(player);
-											}
-										} else
-											Message.noPlayer(player);
-									}
-
-								});
-							}
-							
-						});
 					} else {
-						Message.invalidFormat(player, args[1]);
+						UUID uuid = UUIDFetcher.findUUID(args[0]);
+						if (uuid == null) {
+							msg.send(player, "NO_PLAYER");
+							return;
+						}
+						if (args.length == 1) {
+							dbAccess.getRep(player, args[0], uuid, 1);
+						} else if (args.length >= 2) {
+							if (args[1].equalsIgnoreCase("positive") || args[1].equalsIgnoreCase("pos") || args[1].equalsIgnoreCase("+")) {
+								for (int i = 10; i > 0; i--) {
+									if (player.hasPermission("rep.amount." + i)) {
+										String comment = Message.getComment(args);
+										dbAccess.addRep(player, args[0], i, comment);
+										break;
+									}
+								}
+							} else if (args[1].equalsIgnoreCase("negative") || args[1].equalsIgnoreCase("neg") || args[1].equalsIgnoreCase("-")) {
+								for (int i = 10; i > 0; i--) {
+									if (player.hasPermission("rep.amount." + i)) {
+										dbAccess.addRep(player, args[0], -i, Message.getComment(args));
+										break;
+									}
+								}
+							} else if (args[1].equalsIgnoreCase("page")) {
+								try {
+									dbAccess.getRep(player, args[0], uuid, Integer.parseInt(args[2]));
+								} catch (Exception e) {
+									msg.send(player, "NOT_INT");
+								}
+							} else {
+								msg.send(player, "INVALID_FORMAT",  args[1]);
+							}
+						}
 					}
 				}
-			}
+			});
 			return true;
 		}
 		return false;
-	}
-	
-	/**
-	 * getComment - fired when a new rep record is being created to get comment for reputation record
-	 * 
-	 * @param args - array of arguments containing comment
-	 * @return - returns comment as a string
-	 */
-	private synchronized String getComment(String[] args) {
-		String comment = "";
-		if (args.length >= 3) {
-			StringBuilder builder = new StringBuilder();
-			for(int i = 2; i < args.length; i++){
-				builder.append(args[i]);
-				builder.append(" ");	
-			}
-			comment = builder.toString();
-		}
-		return comment;
-	}
-	
-	/**
-	 * deleteRecord - fired when a reputation record is being deleted
-	 * 
-	 * @param player - command sender
-	 * @param reciever - player who recieved the rep that is being deleted
-	 * @param giver - player who gave the rep that is being deleted
-	 */
-	private void deleteRecord(Player player, String reciever, String giver) {
-		dbAccess.getrepIdByUsername(player, reciever, giver, new CallbackInt() {
-
-			@Override
-			public void onQueryDone(int repId) {
-				if (repId != 0) {
-					dbAccess.checkRepId(repId, new CallbackBoolean() {
-
-						@Override
-						public void onQueryDone(Boolean bool) {
-							if (bool) {
-								dbAccess.removeRep(repId);
-								Message.repRemoved(player);
-							} else {
-								Message.genericErrorPlayer(player);
-							}
-						}
-
-					});
-				} else {
-					Message.noRecord(player);
-				}
-			}
-		});
-	}
-	
-	/**
-	 * displayRep - used to display reputation records 10 at a time
-	 * 
-	 * @param player - command sender
-	 * @param username - player whose rep records are being looked up
-	 * @param reps - synchronized List array containing rep objects
-	 * @param page - rep page command sender is on
-	 * @param totalPages - total pages of rep records
-	 */
-	public static void displayRep(Player player, String username, java.util.List<Rep> reps, int page, int totalPages) {
-		int resultAmount = page * 10;
-		if(page <= totalPages && page > 0) {
-			Message.repHeader(player, username);
-			Rep rep;
-			if(reps.size()-resultAmount <= 0) {
-				if(page == 1) {
-					for(int i = 0; i < reps.size(); i++) {
-						rep = reps.get(i);
-						sendRep(player, rep);
-					}
-				} else {
-					int remaining = reps.size()%(resultAmount-10);
-					for(int i = reps.size()-remaining; i < reps.size(); i++) {
-						rep = reps.get(i);
-						sendRep(player, rep);
-					}
-				}
-			} else {
-				for(int i = resultAmount-10; i < resultAmount; i++) {
-					rep = reps.get(i);
-					sendRep(player, rep);
-				}
-			}
-			
-			Message.navigate(player, username, page, totalPages);
-			
-			int positiveRep = 0;
-			int negativeRep = 0;
-			for(Rep record : reps){
-				if(record.getAmount() > 0) {
-					positiveRep += record.getAmount();
-				} else if (record.getAmount() < 0) {
-					negativeRep += record.getAmount();
-				}
-			}
-			
-			if(positiveRep + negativeRep > 0) {
-				Message.repTotalPositive(player, positiveRep, negativeRep);
-			} else if(positiveRep + negativeRep < 0) {
-				Message.repTotalNegative(player, positiveRep, negativeRep);
-			} else {
-				Message.repTotalZero(player, positiveRep, negativeRep);
-			}
-			
-			Message.repFooter(player);
-		} else {
-			Message.pageOutOfBounds(player);
-		}
-	}
-	
-	/**
-	 * sendRep - decides whether rep was positive or negative and sends output accordingly
-	 * 
-	 * @param player - command sender
-	 * @param reps - synchronized List array containing rep objects
-	 * @param i - counter variable
-	 */
-	private static void sendRep(Player player, Rep rep) {
-		if(rep.getAmount() > 0){
-			Message.repPositive(player, rep.getAmount(), rep.getDate(), rep.getUsername(), rep.getComment());
-		} else {
-			Message.repNegative(player, rep.getAmount(), rep.getDate(), rep.getUsername(), rep.getComment());
-		}
-	}
-	
-	public interface CallbackBoolean {
-		public void onQueryDone(Boolean bool);
-	}
-	
-	public interface CallbackInt {
-		public void onQueryDone(int num);
-	}
-	
-	public interface CallbackRep {
-		public void onQueryDone(List<Rep> reps, int totalPages);
-	}
-	
-	public interface CallbackUUID {
-		public void onQueryDone(UUID uuid);
 	}
 	
 }

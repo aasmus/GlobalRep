@@ -52,26 +52,13 @@ public class DatabaseConnection {
 	 */
 	public Connection getConnection() {
 		try {
-			Class.forName("com.mysql.jdbc.Driver").newInstance();
-		} catch (InstantiationException e) {
-			System.out.println("InstantiationException: ");
-			Message.genericErrorSystem(e);
-		} catch (IllegalAccessException e) {
-			System.out.println("IllegalAccessException: ");
-			Message.genericErrorSystem(e);
-		} catch (ClassNotFoundException e) {
-			System.out.println("ClassNotFoundException: ");
-			Message.genericErrorSystem(e);
-		}
-
-		Connection conn = null;
-
-		try {
-			conn = DriverManager.getConnection("jdbc:mysql://" + DB_IP + ":" + DB_PORT + "/" + DB_NAME, USERNAME, PASSWORD);
-		} catch (SQLException e) {
+			Class.forName("com.mysql.jdbc.Driver");
+			Connection conn = DriverManager.getConnection("jdbc:mysql://" + DB_IP + ":" + DB_PORT + "/" + DB_NAME, USERNAME, PASSWORD);
+			return conn;
+		} catch (SQLException | ClassNotFoundException e) {
 			Message.databaseError(e);
 		}
-		return conn;
+		return null;
 	}
 	
 	private Connection renewConnection(Connection conn) {
@@ -91,9 +78,8 @@ public class DatabaseConnection {
 	 */
 	public Connection checkConnection(Connection connection) {
 		try {
-			if(connection == null || connection.isClosed()) {
+			if(connection == null || connection.isClosed())
 				 connection = renewConnection(connection);
-			}
 		} catch (SQLException e) {
 			Message.databaseError(e);
 		}

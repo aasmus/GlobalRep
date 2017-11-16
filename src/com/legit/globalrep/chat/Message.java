@@ -25,6 +25,9 @@ package com.legit.globalrep.chat;
 
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
+
+import com.legit.globalrep.object.Rep;
 
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -34,129 +37,168 @@ import net.md_5.bungee.api.chat.TextComponent;
 
 public class Message {
 	
-	public static void tableCreated(String table) {
-		System.out.println("[GlobalRep] " + table + " table created");
+	private static Plugin plugin;
+	
+	public Message(Plugin plugin) {
+		Message.plugin = plugin;
 	}
 	
-	public static void genericErrorSystem(Exception e) {
-		e.printStackTrace();
+	public void send(Player player, String message) {
+		if(player.isOnline())
+			player.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("MESSAGES.PREFIX") + " "+ plugin.getConfig().getString("MESSAGES." + message)));
+	}
+	
+	public void send(Player player, String message, String parameter) {
+		if(player.isOnline()) {
+			String str = plugin.getConfig().getString("MESSAGES." + message);
+			String output = str.replaceAll("<parameter>", parameter);
+			player.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("MESSAGES.PREFIX") + " " + output));			
+		}
+	}
+	
+	public void sendHelp(Player player) {
+		player.sendMessage(ChatColor.AQUA + "§m" + StringUtils.repeat(" ", 31) + ChatColor.GREEN + ChatColor.BOLD + " Global Rep " + ChatColor.RESET + ChatColor.AQUA + "§m" + StringUtils.repeat(" ", 31));
+		player.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("MESSAGES.HELP_CHECK")));
+		player.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("MESSAGES.HELP_POSITIVE")));
+		player.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("MESSAGES.HELP_NEGATIVE")));
+		if(player.hasPermission("rep.delete.self"))
+			player.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("MESSAGES.HELP_DELETE_SELF")));
+		if(player.hasPermission("rep.delete") || player.hasPermission("rep.delete.others"))
+			player.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("MESSAGES.HELP_DELETE_OTHERS")));
+		printLine(player);
+	}
+	
+	public void tableCreated(String table) {
+		System.out.println("[GlobalRep] " + table + " table created");
 	}
 	
 	public static void databaseError(Exception e) {
 		System.out.println("[GlobalRep] An Error occured. Is the database down?");
 		e.printStackTrace();
 	}
+
 	
-	public static void genericErrorPlayer(Player player) {
-		if(player.isOnline()) {
-			player.sendMessage(chatPrefix() + ChatColor.RED + "An error has occured. Please tell a server administrator.");
+	
+	/**
+	 * getComment - fired when a new rep record is being created to get comment for reputation record
+	 * 
+	 * @param args - array of arguments containing comment
+	 * @return - returns comment as a string
+	 */
+	public synchronized static String getComment(String[] args) {
+		String comment = "";
+		if (args.length >= 3) {
+			StringBuilder builder = new StringBuilder();
+			for(int i = 2; i < args.length; i++){
+				builder.append(args[i]);
+				builder.append(" ");	
+			}
+			comment = builder.toString();
+		}
+		return comment;
+	}
+	
+	
+	/**
+	 * displayRep - used to display reputation records 10 at a time
+	 * 
+	 * @param player - command sender
+	 * @param username - player whose rep records are being looked up
+	 * @param reps - synchronized List array containing rep objects
+	 * @param page - rep page command sender is on
+	 * @param totalPages - total pages of rep records
+	 */
+	public void displayRep(Player player, String username, java.util.List<Rep> reps, int page, int totalPages) {
+		int resultAmount = page * 10;
+		if(page <= totalPages && page > 0) {
+			Message.repHeader(player, username);
+			Rep rep;
+			if(reps.size()-resultAmount <= 0) {
+				if(page == 1) {
+					for(int i = 0; i < reps.size(); i++) {
+						rep = reps.get(i);
+						sendRep(player, rep);
+					}
+				} else {
+					int remaining = reps.size()%(resultAmount-10);
+					for(int i = reps.size()-remaining; i < reps.size(); i++) {
+						rep = reps.get(i);
+						sendRep(player, rep);
+					}
+				}
+			} else {
+				for(int i = resultAmount-10; i < resultAmount; i++) {
+					rep = reps.get(i);
+					sendRep(player, rep);
+				}
+			}
+			
+			Message.navigate(player, username, page, totalPages);
+			
+			int positiveRep = 0;
+			int negativeRep = 0;
+			for(Rep record : reps){
+				if(record.getAmount() > 0) {
+					positiveRep += record.getAmount();
+				} else if (record.getAmount() < 0) {
+					negativeRep += record.getAmount();
+				}
+			}
+			
+			if(positiveRep + negativeRep > 0) {
+				Message.repTotalPositive(player, positiveRep, negativeRep);
+			} else if(positiveRep + negativeRep < 0) {
+				Message.repTotalNegative(player, positiveRep, negativeRep);
+			} else {
+				Message.repTotalZero(player, positiveRep, negativeRep);
+			}
+			
+			Message.repFooter(player);
+		} else {
+			send(player, "PAGE_OUT_OF_BOUNDS");
 		}
 	}
 	
-	public static void help(Player player) {
-		if(player.isOnline()) {
-			player.sendMessage(ChatColor.AQUA + "§m" + StringUtils.repeat(" ", 31) + ChatColor.GREEN + ChatColor.BOLD + " Global Rep " + ChatColor.RESET + ChatColor.AQUA + "§m" + StringUtils.repeat(" ", 31));
-			player.sendMessage(ChatColor.GREEN + "Use /rep <name> to see a player's rep!");
-			player.sendMessage(ChatColor.GREEN + "Use /rep <name> positive <comment> to give positive rep!");
-			player.sendMessage(ChatColor.GREEN + "Use /rep <name> negative <comment> to give negative rep!");
-			if(player.hasPermission("rep.delete.self"))
-				player.sendMessage(ChatColor.GREEN + "Use /rep delete <name> to delete a rep you gave someone!");
-			if(player.hasPermission("rep.delete") || player.hasPermission("rep.delete.others"))
-				player.sendMessage(ChatColor.GREEN + "Use /rep delete <reciever> <giver> to remove rep!");
-			printLine(player);
+	/**
+	 * sendRep - decides whether rep was positive or negative and sends output accordingly
+	 * 
+	 * @param player - command sender
+	 * @param reps - synchronized List array containing rep objects
+	 * @param i - counter variable
+	 */
+	private static void sendRep(Player player, Rep rep) {
+		if(rep.getAmount() > 0){
+			Message.repPositive(player, rep.getAmount(), rep.getDate(), rep.getUsername(), rep.getComment());
+		} else {
+			Message.repNegative(player, rep.getAmount(), rep.getDate(), rep.getUsername(), rep.getComment());
 		}
 	}
 	
-	private static String chatPrefix() {
-		return ChatColor.AQUA + "[" + ChatColor.GREEN + "Rep" + ChatColor.AQUA + "] ";
-	}
 	
-	public static void repSelf(Player player) {
-		if(player.isOnline()) {
-			player.sendMessage(chatPrefix() + ChatColor.RED + "You cannot give yourself rep.");
-		}
-	}
 	
-	public static void noInt(Player player) {
-		if(player.isOnline()) {
-			player.sendMessage(chatPrefix() + ChatColor.RED + "No page number entered");
-		}
-	}
 	
-	public static void invalidFormat(Player player, String invalid) {
-		if(player.isOnline()) {
-			player.sendMessage(chatPrefix() + ChatColor.RED + invalid + " is an unknown parameter. Parameters are: positive, negative, and page");	
-		}
-	}
 	
-	public static void noRecord(Player player) {
-		if(player.isOnline()) {
-			player.sendMessage(chatPrefix() + ChatColor.RED + "That rep record doesn't exist!");
-		}
-	}
 	
-	public static void noPlayer(Player player) {
-		if(player.isOnline()) {
-			player.sendMessage(chatPrefix() + ChatColor.RED + "That player does not exist!");
-		}
-	}
-	
-	public static void noRep(Player player, String username) {
-		if(player.isOnline()) {
-			player.sendMessage(chatPrefix() + ChatColor.BLUE + username + " has no rep!");
-		}
-	}
-	
-	public static void pageOutOfBounds(Player player) {
-		if(player.isOnline()) {
-			player.sendMessage(chatPrefix() + ChatColor.RED + "Invalid page number.");
-		}
-	}
-	
-	public static void noRepSelf(Player player) {
-		if(player.isOnline()) {
-			player.sendMessage(chatPrefix() + ChatColor.RED + "You do not have permission do delete reputation records.");
-		}
-	}
-	
-	public static void repRemoved(Player player) {
-		if(player.isOnline()) {
-			player.sendMessage(chatPrefix() + ChatColor.RED + "Reputaton record deleted.");
-		}
-	}
-	
-	public static void repAddedSelf(Player player) {
-		if(player.isOnline()) {
-			player.sendMessage(chatPrefix() + ChatColor.BLUE + "Your reputation has changed! View your rep with /rep " + player.getName() + ".");
-		}
-	}
-	
-	public static void repAddedOther(Player player, String username) {
-		if(player.isOnline()) {
-			player.sendMessage(chatPrefix() + ChatColor.BLUE + "Reputation added! You can use /rep " + username + " to see it.");
-		}
-	}
-	
-	public static void repHeader(Player player, String username) {
+	private static void repHeader(Player player, String username) {
 		if(player.isOnline()) {
 			player.sendMessage(ChatColor.GREEN + "" + ChatColor.BOLD + username + "'s Reputation:");
 			printLine(player);
 		}
 	}
 	
-	public static void repPositive(Player player, int amount, String date, String username, String comment) {
+	private static void repPositive(Player player, int amount, String date, String username, String comment) {
 		if(player.isOnline()) {
 			player.sendMessage(ChatColor.GREEN + "+" + amount + " " + ChatColor.GRAY + date + " " + ChatColor.YELLOW + username + ": " + ChatColor.RESET + comment);
 		}
 	}
 	
-	public static void repNegative(Player player, int amount, String date, String username, String comment) {
+	private static void repNegative(Player player, int amount, String date, String username, String comment) {
 		if(player.isOnline()) {
 			player.sendMessage(ChatColor.RED + "" + amount + " " + ChatColor.GRAY + date + " " + ChatColor.YELLOW + username + ": " + ChatColor.RESET + comment);
 		}
 	}
 	
-	public static void navigate(Player player, String username, int page, int totalPages) {
+	private static void navigate(Player player, String username, int page, int totalPages) {
 		if(player.isOnline()) {
 			if(page == 1) {
 				if(page == totalPages) {
@@ -208,25 +250,25 @@ public class Message {
 		}
 	}
 	
-	public static void repTotalPositive(Player player, int positiveRep, int negativeRep) {
+	private static void repTotalPositive(Player player, int positiveRep, int negativeRep) {
 		if(player.isOnline()) {
 			player.sendMessage(ChatColor.GREEN + "Positive Rep: " + positiveRep + " " + ChatColor.RED + "Negative Rep: " + Math.abs(negativeRep) + ChatColor.BLUE + " Total Rep: " + ChatColor.GREEN + (positiveRep + negativeRep));			
 		}
 	}
 	
-	public static void repTotalNegative(Player player, int positiveRep, int negativeRep) {
+	private static void repTotalNegative(Player player, int positiveRep, int negativeRep) {
 		if(player.isOnline()) {
 			player.sendMessage(ChatColor.GREEN + "Positive Rep: " + positiveRep + " " + ChatColor.RED + "Negative Rep: " + Math.abs(negativeRep) + ChatColor.BLUE + " Total Rep: " + ChatColor.RED + (positiveRep + negativeRep));			
 		}
 	}
 	
-	public static void repTotalZero(Player player, int positiveRep, int negativeRep) {
+	private static void repTotalZero(Player player, int positiveRep, int negativeRep) {
 		if(player.isOnline()) {
 			player.sendMessage(ChatColor.GREEN + "Positive Rep: " + positiveRep + " " + ChatColor.RED + "Negative Rep: " + Math.abs(negativeRep) + ChatColor.BLUE + " Total Rep: " + ChatColor.GRAY + (positiveRep + negativeRep));
 		}
 	}
 	
-	public static void repFooter(Player player) {
+	private static void repFooter(Player player) {
 		if(player.isOnline()) {
 			printLine(player);
 		}

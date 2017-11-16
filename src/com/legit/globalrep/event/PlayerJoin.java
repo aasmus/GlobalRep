@@ -1,20 +1,19 @@
 package com.legit.globalrep.event;
 
-import static org.bukkit.Bukkit.getServer;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.scheduler.BukkitScheduler;
 
 import com.legit.globalrep.sql.DatabaseAccess;
 
 public class PlayerJoin implements Listener {
 	
-	private Plugin plugin;
 	private DatabaseAccess dbAccess;
+	private Plugin plugin;
 	
 	public PlayerJoin(Plugin plugin, DatabaseAccess dbAccess) {
 		this.plugin = plugin;
@@ -27,14 +26,14 @@ public class PlayerJoin implements Listener {
 	 * @param event
 	 */
 	@EventHandler(priority = EventPriority.NORMAL)
-    public void onPlayerJoin(PlayerJoinEvent event) {
-    	Player p = event.getPlayer();
-   		BukkitScheduler scheduler = getServer().getScheduler();
-   		scheduler.runTaskLaterAsynchronously(plugin, new Runnable() {
-   			public void run() {
-   				dbAccess.checkDatabase(p.getName(), p.getUniqueId().toString());
-   			}
-    	}, 1L);
-    }
+	public void onPlayerJoin(PlayerJoinEvent event) {
+		Player p = event.getPlayer();
+		Bukkit.getScheduler().runTaskAsynchronously(plugin, new Runnable() {
+			@Override
+			public void run() {
+				dbAccess.checkDatabase(p.getName(), p.getUniqueId().toString());
+			}
+		});
+	}
 
 }
