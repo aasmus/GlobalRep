@@ -83,14 +83,14 @@ public class DatabaseAccess {
 			ps.setQueryTimeout(5);
 			ps.executeUpdate();
 		} catch (SQLException e) {
-			e.printStackTrace();
+			Message.databaseError(e);
 		}
 		try {
 			ps = connection.prepareStatement(CREATE_REP);
 			ps.setQueryTimeout(5);
 			ps.executeUpdate();
 		} catch (SQLException e) {
-			e.printStackTrace();
+			Message.databaseError(e);
 		}
 	}
 	
@@ -170,7 +170,7 @@ public class DatabaseAccess {
 					int totalPages = (numRep + 9) / 10;
 					msg.displayRep(player, username, reps, page, totalPages);
 				} catch (Exception e) {
-					e.printStackTrace();
+					Message.databaseError(e);
 				}
 			}
 		} catch (Exception e) {

@@ -23,6 +23,7 @@
  */
 package com.legit.globalrep.commands;
 
+import java.util.ArrayList;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -40,6 +41,7 @@ public class RepCommand implements CommandExecutor {
 	private DatabaseAccess dbAccess;
 	private Plugin plugin;
 	private Message msg;
+	private ArrayList<UUID> async = new ArrayList<UUID>();
 	
 	public RepCommand(DatabaseAccess dbAccess, Plugin plugin, Message msg) {
 		this.dbAccess = dbAccess;
@@ -54,65 +56,69 @@ public class RepCommand implements CommandExecutor {
 		}
 		Player player = (Player) sender;
 		if (cmd.getName().equalsIgnoreCase("rep")) {
-			Bukkit.getScheduler().runTaskAsynchronously(plugin, new Runnable() {
-				@Override
-				public void run() {
-					if (args.length == 0) {
-						msg.sendHelp(player);
-					} else if(args[0].equalsIgnoreCase("help")) {
-						msg.sendHelp(player);
-					} else if (args[0].equalsIgnoreCase("delete")) {
-						if (args.length == 2) {
-							if (player.hasPermission("rep.delete.self")) {
-								dbAccess.removeRep(player, args[1], player.getName());
-							}
-							else {
-								msg.send(player, "SELF_REP");
+			if(!async.contains(player.getUniqueId())) {
+				async.add(player.getUniqueId());
+				Bukkit.getScheduler().runTaskAsynchronously(plugin, new Runnable() {
+					@Override
+					public void run() {
+						if (args.length == 0) {
+							msg.sendHelp(player);
+						} else if(args[0].equalsIgnoreCase("help")) {
+							msg.sendHelp(player);
+						} else if (args[0].equalsIgnoreCase("delete")) {
+							if (args.length == 2) {
+								if (player.hasPermission("rep.delete.self")) {
+									dbAccess.removeRep(player, args[1], player.getName());
+								}
+								else {
+									msg.send(player, "SELF_REP");
+								}
+							} else {
+								if (player.hasPermission("rep.delete") || player.hasPermission("rep.delete.others")) {
+									dbAccess.removeRep(player, args[1], args[2]);
+								} else {
+									msg.send(player, "SELF_REP");
+								}
 							}
 						} else {
-							if (player.hasPermission("rep.delete") || player.hasPermission("rep.delete.others")) {
-								dbAccess.removeRep(player, args[1], args[2]);
-							} else {
-								msg.send(player, "SELF_REP");
+							UUID uuid = UUIDFetcher.findUUID(args[0]);
+							if (uuid == null) {
+								msg.send(player, "NO_PLAYER");
+								return;
 							}
-						}
-					} else {
-						UUID uuid = UUIDFetcher.findUUID(args[0]);
-						if (uuid == null) {
-							msg.send(player, "NO_PLAYER");
-							return;
-						}
-						if (args.length == 1) {
-							dbAccess.getRep(player, args[0], uuid, 1);
-						} else if (args.length >= 2) {
-							if (args[1].equalsIgnoreCase("positive") || args[1].equalsIgnoreCase("pos") || args[1].equalsIgnoreCase("+")) {
-								for (int i = 10; i > 0; i--) {
-									if (player.hasPermission("rep.amount." + i)) {
-										String comment = Message.getComment(args);
-										dbAccess.addRep(player, args[0], i, comment);
-										break;
+							if (args.length == 1) {
+								dbAccess.getRep(player, args[0], uuid, 1);
+							} else if (args.length >= 2) {
+								if (args[1].equalsIgnoreCase("positive") || args[1].equalsIgnoreCase("pos") || args[1].equalsIgnoreCase("+")) {
+									for (int i = 10; i > 0; i--) {
+										if (player.hasPermission("rep.amount." + i)) {
+											String comment = Message.getComment(args);
+											dbAccess.addRep(player, args[0], i, comment);
+											break;
+										}
 									}
-								}
-							} else if (args[1].equalsIgnoreCase("negative") || args[1].equalsIgnoreCase("neg") || args[1].equalsIgnoreCase("-")) {
-								for (int i = 10; i > 0; i--) {
-									if (player.hasPermission("rep.amount." + i)) {
-										dbAccess.addRep(player, args[0], -i, Message.getComment(args));
-										break;
+								} else if (args[1].equalsIgnoreCase("negative") || args[1].equalsIgnoreCase("neg") || args[1].equalsIgnoreCase("-")) {
+									for (int i = 10; i > 0; i--) {
+										if (player.hasPermission("rep.amount." + i)) {
+											dbAccess.addRep(player, args[0], -i, Message.getComment(args));
+											break;
+										}
 									}
+								} else if (args[1].equalsIgnoreCase("page")) {
+									try {
+										dbAccess.getRep(player, args[0], uuid, Integer.parseInt(args[2]));
+									} catch (Exception e) {
+										msg.send(player, "NOT_INT");
+									}
+								} else {
+									msg.send(player, "INVALID_FORMAT",  args[1]);
 								}
-							} else if (args[1].equalsIgnoreCase("page")) {
-								try {
-									dbAccess.getRep(player, args[0], uuid, Integer.parseInt(args[2]));
-								} catch (Exception e) {
-									msg.send(player, "NOT_INT");
-								}
-							} else {
-								msg.send(player, "INVALID_FORMAT",  args[1]);
 							}
 						}
 					}
-				}
-			});
+				});
+				async.remove(player.getUniqueId());
+			}
 			return true;
 		}
 		return false;
