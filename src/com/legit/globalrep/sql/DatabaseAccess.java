@@ -227,7 +227,6 @@ public class DatabaseAccess {
 	 * @param giver - username of player who gave the rep record
 	 */
 	public void removeRep(Player player, String reciever, String giver) {
-		System.out.println("CALLED REMOVEREP");
 		this.connection = dbConn.checkConnection(connection);
 		try {
 			PreparedStatement ps = connection.prepareStatement(GET_REPID_BY_GIVERID);
