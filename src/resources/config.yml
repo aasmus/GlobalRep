@@ -5,22 +5,24 @@ MYSQL:
   Username: root
   Password: password
 MESSAGES:
-  PREFIX: "&b[&aRep&b]"
-  HELP_CHECK: "&aUse /rep <name> to see a player's rep!"
-  HELP_POSITIVE: "&aUse /rep <name> positive <comment> to give positive rep!"
-  HELP_NEGATIVE: "&aUse /rep <name> negative <comment> to give negative rep!"
-  HELP_DELETE_SELF: "&aUse /rep delete <name> to delete a rep you gave someone!"
-  HELP_DELETE_OTHERS: "&aUse /rep delete <reciever> <giver> to remove rep!"
-  SELF_REP: "&cYou cannot give yourself rep."
-  NOT_INT: "&cNo page number entered."
-  INVALID_FORMAT: "&c<parameter> is an unknown parameter. Parameters are: positive, negative, and page"
-  NO_RECORD: "&cThat rep record doesn't exist!"
-  NO_PLAYER: "&cThat player does not exist!"
-  NO_REP: "&9<parameter> has no rep!"
-  PAGE_OUT_OF_BOUNDS: "&cInvalid page number."
-  NO_PERMISSION: "&cYou do not have permission do delete reputation records."
-  REP_REMOVED: "&cReputaton record deleted."
-  REP_ADDED: "&9Your reputation has changed! View your rep with /rep <parameter>."
-  REP_GIVEN: "&9Reputation added! You can use /rep <parameter> to see it."
-  ERROR: "&cAn error has occured. Please tell a server administrator."
+  PREFIX: '&b[&aRep&b]'
+  HELP_CHECK: '&aUse /rep <name> to see a player''s rep!'
+  HELP_POSITIVE: '&aUse /rep <name> positive <comment> to give positive rep!'
+  HELP_NEGATIVE: '&aUse /rep <name> negative <comment> to give negative rep!'
+  HELP_DELETE_SELF: '&aUse /rep delete <name> to delete a rep you gave someone!'
+  HELP_DELETE_OTHERS: '&aUse /rep delete <reciever> <giver> to remove rep!'
+  SELF_REP: '&cYou cannot give yourself rep.'
+  NO_INT: '&cNo page number entered.'
+  NOT_INT: '&cNo page number entered.'
+  INVALID_FORMAT: '&c<parameter> is an unknown parameter. Parameters are: positive,
+    negative, and page'
+  NO_RECORD: '&cThat rep record doesn''t exist!'
+  NO_PLAYER: '&cThat player does not exist!'
+  NO_REP: '&9<parameter> has no rep!'
+  PAGE_OUT_OF_BOUNDS: '&cInvalid page number.'
+  NO_PERMISSION: '&cYou do not have permission do delete reputation records.'
+  REP_REMOVED: '&cReputaton record deleted.'
+  REP_ADDED: '&9Your reputation has changed! View your rep with /rep <parameter>.'
+  REP_GIVEN: '&9Reputation added! You can use /rep <parameter> to see it.'
+  ERROR: '&cAn error has occured. Please tell a server administrator.'
   
