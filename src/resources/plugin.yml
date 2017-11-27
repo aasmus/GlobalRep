@@ -1,6 +1,6 @@
 main: com.legit.globalrep.RepDriver
 name: GlobalRep
-version: 1.8.1
+version: 1.8.2
 author: aasmus
 description: Cross Server Reputation Plugin
 commands:
