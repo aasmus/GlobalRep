@@ -28,10 +28,10 @@ public class PlayerJoin implements Listener {
 	@EventHandler(priority = EventPriority.NORMAL)
 	public void onPlayerJoin(PlayerJoinEvent event) {
 		Player p = event.getPlayer();
-		Bukkit.getScheduler().runTaskAsynchronously(plugin, new Runnable() {
+		Bukkit.getScheduler().runTaskAsynchronously(plugin, new Runnable() { //start a new async thread
 			@Override
 			public void run() {
-				dbAccess.checkDatabase(p.getName(), p.getUniqueId().toString());
+				dbAccess.checkDatabase(p.getName(), p.getUniqueId().toString()); //check if the player is in the database
 			}
 		});
 	}

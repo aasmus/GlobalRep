@@ -39,17 +39,23 @@ public class RepDriver extends JavaPlugin implements Listener {
 	
     @Override
     public void onEnable() {
+    	//Register plugin with server
         getServer().getPluginManager().registerEvents(this, this);
+        //Check if config has been created
     	if(config.contains("MYSQL")){
     		Message msg = new Message(this);
     		this.dbAccess = new DatabaseAccess(config.getString("MYSQL.Host"), config.getInt("MYSQL.Port"), config.getString("MYSQL.Database"), config.getString("MYSQL.Username"), config.getString("MYSQL.Password"), msg);
+    		//start task on new thread
     		Bukkit.getScheduler().runTaskAsynchronously(this, new Runnable() {
     			@Override
     			public void run() {
+    				//Setup database
     	    		dbAccess.createTables();
     			}
     		});
+    		//Register events
         	Bukkit.getPluginManager().registerEvents(new PlayerJoin(this, dbAccess), this);
+        	//register commands
         	this.getCommand("rep").setExecutor(new RepCommand(dbAccess, this, msg));
     	}
     	setupConfig();
@@ -60,6 +66,10 @@ public class RepDriver extends JavaPlugin implements Listener {
     	Bukkit.getScheduler().cancelTasks(this);
     }
    
+    
+    /**
+     * SetupConfig: Sets up config.yml file
+     */
     private void setupConfig() {
 		if(!config.contains("MYSQL.Host"))
 			config.addDefault("MYSQL.Host", "127.0.0.1");

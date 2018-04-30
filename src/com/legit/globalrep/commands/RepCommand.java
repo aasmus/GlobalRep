@@ -56,19 +56,19 @@ public class RepCommand implements CommandExecutor {
 		}
 		Player player = (Player) sender;
 		if (cmd.getName().equalsIgnoreCase("rep")) {
-			if(!async.contains(player.getUniqueId())) {
-				async.add(player.getUniqueId());
-				Bukkit.getScheduler().runTaskAsynchronously(plugin, new Runnable() {
+			if(!async.contains(player.getUniqueId())) { //checks to see if player already has an async thread open
+				async.add(player.getUniqueId()); //adds player to async thread array
+				Bukkit.getScheduler().runTaskAsynchronously(plugin, new Runnable() { //starts a new async thread
 					@Override
 					public void run() {
 						if (args.length == 0) {
 							msg.sendHelp(player);
-						} else if(args[0].equalsIgnoreCase("help")) {
-							msg.sendHelp(player);
-						} else if (args[0].equalsIgnoreCase("delete")) {
+						} else if(args[0].equalsIgnoreCase("help")) { //checks for '/rep help' command
+							msg.sendHelp(player); 
+						} else if (args[0].equalsIgnoreCase("delete")) { //checks for '/rep delete ' command
 							if (args.length == 2) {
-								if (player.hasPermission("rep.delete.self")) {
-									dbAccess.removeRep(player, args[1], player.getName());
+								if (player.hasPermission("rep.delete.self")) { //checks for permissions
+									dbAccess.removeRep(player, args[1], player.getName()); //delete's reputation record
 								}
 								else {
 									msg.send(player, "SELF_REP");
@@ -81,14 +81,14 @@ public class RepCommand implements CommandExecutor {
 								}
 							}
 						} else {
-							UUID uuid = UUIDFetcher.findUUID(args[0]);
-							if (uuid == null) {
+							UUID uuid = UUIDFetcher.findUUID(args[0]);  //finds UUID by username
+							if (uuid == null) { //checks if name exists
 								msg.send(player, "NO_PLAYER");
 								return;
 							}
-							if (args.length == 1) {
+							if (args.length == 1) { //shows player's reputation records
 								dbAccess.getRep(player, args[0], uuid, 1);
-							} else if (args.length >= 2) {
+							} else if (args.length >= 2) { //adds positive reputation record
 								if (args[1].equalsIgnoreCase("positive") || args[1].equalsIgnoreCase("pos") || args[1].equalsIgnoreCase("+")) {
 									for (int i = 10; i > 0; i--) {
 										if (player.hasPermission("rep.amount." + i)) {
@@ -97,7 +97,7 @@ public class RepCommand implements CommandExecutor {
 											break;
 										}
 									}
-								} else if (args[1].equalsIgnoreCase("negative") || args[1].equalsIgnoreCase("neg") || args[1].equalsIgnoreCase("-")) {
+								} else if (args[1].equalsIgnoreCase("negative") || args[1].equalsIgnoreCase("neg") || args[1].equalsIgnoreCase("-")) { //adds negative reputation record
 									for (int i = 10; i > 0; i--) {
 										if (player.hasPermission("rep.amount." + i)) {
 											dbAccess.addRep(player, args[0], -i, Message.getComment(args));
@@ -108,16 +108,16 @@ public class RepCommand implements CommandExecutor {
 									try {
 										dbAccess.getRep(player, args[0], uuid, Integer.parseInt(args[2]));
 									} catch (Exception e) {
-										msg.send(player, "NOT_INT");
+										msg.send(player, "NO_INT");
 									}
-								} else {
+								} else { //command format is invalid
 									msg.send(player, "INVALID_FORMAT",  args[1]);
 								}
 							}
 						}
 					}
 				});
-				async.remove(player.getUniqueId());
+				async.remove(player.getUniqueId()); //removes player from async thread array
 			}
 			return true;
 		}

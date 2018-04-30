@@ -23,6 +23,12 @@
  */
 package com.legit.globalrep.object;
 
+
+
+/**
+ * Object used for reputation records
+ */
+
 public class Rep {
 	private int amount;
 	private String date;

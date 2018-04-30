@@ -43,11 +43,13 @@ public class Message {
 		Message.plugin = plugin;
 	}
 	
+	//sends message without a parameter to player
 	public void send(Player player, String message) {
 		if(player.isOnline())
 			player.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("MESSAGES.PREFIX") + " "+ plugin.getConfig().getString("MESSAGES." + message)));
 	}
 	
+	//sends message with a parameter to player
 	public void send(Player player, String message, String parameter) {
 		if(player.isOnline()) {
 			String str = plugin.getConfig().getString("MESSAGES." + message);
@@ -56,6 +58,7 @@ public class Message {
 		}
 	}
 	
+	//sends help information to player
 	public void sendHelp(Player player) {
 		player.sendMessage(ChatColor.AQUA + "§m" + StringUtils.repeat(" ", 31) + ChatColor.GREEN + ChatColor.BOLD + " Global Rep " + ChatColor.RESET + ChatColor.AQUA + "§m" + StringUtils.repeat(" ", 31));
 		player.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("MESSAGES.HELP_CHECK")));
@@ -174,11 +177,7 @@ public class Message {
 		}
 	}
 	
-	
-	
-	
-	
-	
+	//prints rep header to players chat
 	private static void repHeader(Player player, String username) {
 		if(player.isOnline()) {
 			player.sendMessage(ChatColor.GREEN + "" + ChatColor.BOLD + username + "'s Reputation:");
@@ -186,18 +185,21 @@ public class Message {
 		}
 	}
 	
+	//prints reputation records
 	private static void repPositive(Player player, int amount, String date, String username, String comment) {
 		if(player.isOnline()) {
 			player.sendMessage(ChatColor.GREEN + "+" + amount + " " + ChatColor.GRAY + date + " " + ChatColor.YELLOW + username + ": " + ChatColor.RESET + comment);
 		}
 	}
 	
+	//prints reputation records
 	private static void repNegative(Player player, int amount, String date, String username, String comment) {
 		if(player.isOnline()) {
 			player.sendMessage(ChatColor.RED + "" + amount + " " + ChatColor.GRAY + date + " " + ChatColor.YELLOW + username + ": " + ChatColor.RESET + comment);
 		}
 	}
 	
+	//menu navigation for reputation records
 	private static void navigate(Player player, String username, int page, int totalPages) {
 		if(player.isOnline()) {
 			if(page == 1) {
