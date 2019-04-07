@@ -52,6 +52,9 @@ public class DatabaseAccess {
 	private final String GET_REP_BY_UUID = "SELECT r.date, r.repAmount, r.comment, u.username FROM Rep r JOIN  User u ON r.giverId = u.userId WHERE r.userId = (SELECT userId FROM User WHERE uuid = ?) ORDER BY repId DESC";
 	private final String GET_RECIEVERID_BY_UUID = "SELECT userId FROM Rep WHERE userId = (SELECT userId FROM User WHERE UUID = (?))";
 	private final String GET_REPID_BY_GIVERID = "SELECT repId FROM Rep WHERE giverId = (SELECT userId FROM User WHERE username = ?) AND userId = (SELECT userId FROM User WHERE UUID = (SELECT uuid FROM User WHERE username = ?))";
+	private final String GET_TOTAL_REP = "SELECT r.repAmount FROM Rep r WHERE r.userId = (SELECT userId FROM User WHERE uuid = ?)";
+	private final String GET_POSITIVE_REP = "SELECT r.repAmount FROM Rep r WHERE r.userId = (SELECT userId FROM User WHERE uuid = ?) AND r.repAmount > 0";
+	private final String GET_NEGATIVE_REP = "SELECT r.repAmount FROM Rep r WHERE r.userId = (SELECT userId FROM User WHERE uuid = ?) AND r.repAmount < 0";
 	
 	private final String INSERT_UUID_USERNAME = "INSERT INTO User (UUID, username) VALUES (?, ?)";
 	private final String INSERT_REP_BY_USERNAME = "INSERT INTO Rep (date, repAmount, giverId, comment, userId) VALUES (?, ?, (SELECT userId FROM User WHERE uuid = (?)), ?, (SELECT userId FROM User WHERE uuid = (SELECT uuid FROM User WHERE username = ?)))";
@@ -176,6 +179,72 @@ public class DatabaseAccess {
 		} catch (Exception e) {
 			msg.send(player, "NO_REP", username);
 		}
+	}
+	
+	/**
+	 * getTotalRep: used to retrieve a player's reputation records from the database
+	 * 
+	 * @param uuid - UUID of the player who's total rep is being looked up
+	 */
+	public int getTotalRep(UUID uuid) {
+		int rep = 0;
+		this.connection = dbConn.checkConnection(connection);
+		try {
+			PreparedStatement ps = connection.prepareStatement(GET_TOTAL_REP);
+			ps.setQueryTimeout(5);
+			ps.setString(1, uuid.toString());
+			ResultSet rs = ps.executeQuery();
+			while(rs.next()) {
+				rep += rs.getInt("r.repAmount");
+			}			
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		return rep;
+	}
+	
+	/**
+	 * getPositiveRep: used to retrieve a player's reputation records from the database
+	 * 
+	 * @param uuid - UUID of the player who's total rep is being looked up
+	 */
+	public int getPositiveRep(UUID uuid) {
+		int rep = 0;
+		this.connection = dbConn.checkConnection(connection);
+		try {
+			PreparedStatement ps = connection.prepareStatement(GET_POSITIVE_REP);
+			ps.setQueryTimeout(5);
+			ps.setString(1, uuid.toString());
+			ResultSet rs = ps.executeQuery();
+			while(rs.next()) {
+				rep += rs.getInt("r.repAmount");
+			}			
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		return rep;
+	}
+	
+	/**
+	 * getPositiveRep: used to retrieve a player's reputation records from the database
+	 * 
+	 * @param uuid - UUID of the player who's total rep is being looked up
+	 */
+	public int getNegativeRep(UUID uuid) {
+		int rep = 0;
+		this.connection = dbConn.checkConnection(connection);
+		try {
+			PreparedStatement ps = connection.prepareStatement(GET_NEGATIVE_REP);
+			ps.setQueryTimeout(5);
+			ps.setString(1, uuid.toString());
+			ResultSet rs = ps.executeQuery();
+			while(rs.next()) {
+				rep += rs.getInt("r.repAmount");
+			}			
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		return rep;
 	}
 	
 	/**

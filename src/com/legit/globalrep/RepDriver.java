@@ -32,6 +32,7 @@ import com.legit.globalrep.chat.Message;
 import com.legit.globalrep.commands.RepCommand;
 import com.legit.globalrep.event.PlayerJoin;
 import com.legit.globalrep.sql.DatabaseAccess;
+import com.legit.globalrep.util.PlaceholderAPIHook;;
 
 public class RepDriver extends JavaPlugin implements Listener {
 	FileConfiguration config = getConfig();
@@ -59,6 +60,10 @@ public class RepDriver extends JavaPlugin implements Listener {
         	this.getCommand("rep").setExecutor(new RepCommand(dbAccess, this, msg));
     	}
     	setupConfig();
+    	
+		if(Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
+			new PlaceholderAPIHook(this, dbAccess).hook();
+		}
     }
    
     @Override
