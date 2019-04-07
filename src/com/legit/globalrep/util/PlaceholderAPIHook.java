@@ -20,17 +20,24 @@ public class PlaceholderAPIHook extends EZPlaceholderHook {
 		
 		//Placeholder: %GlobalRep_total_rep%
 		if(identifier.equals("total_rep")) {
-			return Integer.toString(dbAccess.getTotalRep(player.getUniqueId()));
+			int totalRep = dbAccess.getTotalRep(player.getUniqueId());
+			if(totalRep > 0) {
+				return "&a+" + Integer.toString(totalRep);
+			} else if(totalRep < 0) {
+				return "&c" + Integer.toString(totalRep);
+			} else {
+				return "&7" + Integer.toString(totalRep);
+			}
 		}
 		
 		//Placeholder: %GlobalRep_positive_rep%
 		if(identifier.equals("positive_rep")) {
-			return Integer.toString(dbAccess.getPositiveRep(player.getUniqueId()));
+			return "&a+" + Integer.toString(dbAccess.getPositiveRep(player.getUniqueId()));
 		}
 		
 		//Placeholder: %GlobalRep_negative_rep%
 		if(identifier.equals("negative_rep")) {
-			return Integer.toString(dbAccess.getNegativeRep(player.getUniqueId()));
+			return "&c" + Integer.toString(dbAccess.getNegativeRep(player.getUniqueId()));
 		}
 		
 		return null;

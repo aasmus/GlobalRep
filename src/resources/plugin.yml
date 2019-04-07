@@ -1,7 +1,7 @@
 main: com.legit.globalrep.RepDriver
 softdepend: [PlaceholderAPI]
 name: GlobalRep
-version: 1.8.3
+version: 1.8.4
 author: aasmus
 description: Cross Server Reputation Plugin
 commands:
